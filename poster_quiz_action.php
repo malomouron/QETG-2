@@ -19,7 +19,7 @@
 
                 //update quiz + img
                 if ($_FILES["image_uploads"]["name"] == ""){
-                    $update_quiz_user = $db->query("UPDATE quiz SET nom_quiz = '" . securisation($_POST['name_quiz']) . "', bienvenue = '',portee = ".$_POST['porte']." WHERE id_quiz = ".$_GET['q']);
+                    $update_quiz_user = $db->query("UPDATE quiz SET nom_quiz = '" . securisation($_POST['name_quiz']) . "', bienvenue = '".securisation($_POST['descrip_quiz'])."',portee = ".$_POST['porte']." WHERE id_quiz = ".$_GET['q']);
                 }else{
                     if (move_uploaded_file($_FILES["image_uploads"]["tmp_name"], $repertoireDestination . $nomDestination)) {
                         $update_quiz_user = $db->query("UPDATE quiz SET nom_quiz = '" . securisation($_POST['name_quiz']) . "', bienvenue = '".securisation($_POST['descrip_quiz'])."', src = '/quiz_perso/" . $nomDestination . "',portee = ".$_POST['porte']." WHERE id_quiz = ".$_GET['q']);

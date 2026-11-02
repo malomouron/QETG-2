@@ -1,0 +1,119 @@
+name: Legacy PHP checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  characterization:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.2', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Check PHP syntax
+        run: |
+          find . -type f -name '*.php' ! -path './tarteaucitron/*' ! -path './modern/*' -print0 |
+            while IFS= read -r -d '' file; do
+              php -l "$file" || exit 1
+            done
+      - name: Run characterization checks
+        run: php tests/characterization.php
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test with a disposable database
+        run: docker compose -p qetg-ci -f tests/compose.integration.yml up --build --abort-on-container-exit --exit-code-from integration
+      - name: Remove test containers
+        if: always()
+        run: docker compose -p qetg-ci -f tests/compose.integration.yml down
+  modern-foundation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modern
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_sqlite
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+      - name: Check formatting
+        run: vendor/bin/pint --test
+      - name: Test Laravel foundation
+        run: |
+          cp .env.example .env
+          php artisan test
+  modern-mysql-integration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modern
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start isolated application
+        run: |
+          cp .env.example .env
+          docker compose -p qetg-modern-ci build
+          docker compose -p qetg-modern-ci run --rm --no-deps app composer install --no-interaction --prefer-dist
+          docker compose -p qetg-modern-ci run --rm --no-deps app php artisan key:generate
+          docker compose -p qetg-modern-ci up -d --wait
+          docker compose -p qetg-modern-ci exec -T app php artisan migrate --force
+      - name: Import disposable historical fixture
+        run: |
+          docker compose -p qetg-modern-ci exec -T -e MYSQL_PWD=local-root-only db mysql -uroot < ../QETG.sql
+          docker compose -p qetg-modern-ci exec -T -e MYSQL_PWD=local-root-only db mysql -uroot -e "
+            GRANT SELECT ON test.* TO 'qetg'@'%';
+            INSERT INTO test.quiz_membre (id, login, pass_md5, email, nom, prenom, admin, ip, date)
+              VALUES (1, 'fixture', MD5('fixture'), 'fixture@example.invalid', 'Fixture', 'User', 0, '127.0.0.1', '2026-01-01');
+            INSERT INTO test.quiz_image (id_image, src, alt) VALUES (1, 'fixture.png', 'Image');
+            INSERT INTO test.quiz (id_quiz, id_image_quiz, nom_quiz, bienvenue, id_user, id_quiz_user, nbrQuestion, quizComplet, portee, src)
+              VALUES (1, 1, 'Quiz source fixture', 'Description', 1, 0, 1, 1, 1, 'fixture.png');
+            INSERT INTO test.quiz_difficulte (id_difficulte, libelle) VALUES (1, 'Facile');
+            INSERT INTO test.quiz_question (id_question, id_quiz, id_image_question, texte_bienvenue, id_difficulte, question_texte, numero_question)
+              VALUES (1, 1, 1, 'Introduction', 1, 'Question fixture', 1);
+            INSERT INTO test.quiz_reponse (id_reponse, id_question, id_image_reponse, choix_possible_quiz, reponseOK, texte_reponse_explicatif, num_reponse)
+              VALUES (1, 1, 1, 'Bonne', '1', 'Explication fixture', 1);
+            INSERT INTO test.quiz_statistique (id_user, id_quiz, date, note, favoris, quiz_utilisateur)
+              VALUES (1, 1, '2026-01-01', 0, 1, 0);
+            INSERT INTO test.quiz_progression (id_prog, id_user, id_question) VALUES (1, 1, 1);"
+          docker compose -p qetg-modern-ci exec -T -e LEGACY_DB_HOST=db -e LEGACY_DB_DATABASE=test -e LEGACY_DB_USERNAME=qetg -e LEGACY_DB_PASSWORD=local-development-only app php artisan qetg:import-official-quizzes
+          curl --fail --silent http://127.0.0.1:8000/catalogue | grep -q 'Quiz source fixture'
+          curl --fail --silent -c cookies.txt http://127.0.0.1:8000/quiz/1 > page.html
+          token=$(sed -n 's/.*name="_token" value="\([^"]*\)".*/\1/p' page.html | head -n 1)
+          test -n "$token"
+          curl --fail --silent -b cookies.txt -c cookies.txt -d "_token=$token" http://127.0.0.1:8000/quiz/1/start > /dev/null
+          curl --fail --silent -b cookies.txt http://127.0.0.1:8000/quiz/1/question | grep -q 'Question fixture'
+          curl --fail --silent -b cookies.txt -c cookies.txt -d "_token=$token&answer_id=1" http://127.0.0.1:8000/quiz/1/answer > /dev/null
+          curl --fail --silent -b cookies.txt http://127.0.0.1:8000/quiz/1/result | grep -q 'Explication fixture'
+          docker compose -p qetg-modern-ci exec -T -e LEGACY_DB_HOST=db -e LEGACY_DB_DATABASE=test -e LEGACY_DB_USERNAME=qetg -e LEGACY_DB_PASSWORD=local-development-only app php artisan qetg:import-members
+          docker compose -p qetg-modern-ci exec -T -e LEGACY_DB_HOST=db -e LEGACY_DB_DATABASE=test -e LEGACY_DB_USERNAME=qetg -e LEGACY_DB_PASSWORD=local-development-only app php artisan qetg:import-official-results
+          docker compose -p qetg-modern-ci exec -T -e LEGACY_DB_HOST=db -e LEGACY_DB_DATABASE=test -e LEGACY_DB_USERNAME=qetg -e LEGACY_DB_PASSWORD=local-development-only app php artisan qetg:import-official-progress
+          curl --fail --silent -b cookies.txt -c cookies.txt http://127.0.0.1:8000/connexion > page.html
+          token=$(sed -n 's/.*name="_token" value="\([^"]*\)".*/\1/p' page.html | head -n 1)
+          test -n "$token"
+          curl --fail --silent -b cookies.txt -c cookies.txt -d "_token=$token&login=fixture&password=fixture" http://127.0.0.1:8000/connexion > /dev/null
+          curl --fail --silent -b cookies.txt http://127.0.0.1:8000/ | grep -q 'action="[^"]*/deconnexion"'
+          curl --fail --silent -b cookies.txt http://127.0.0.1:8000/profil | grep -q 'Quiz source fixture'
+          curl --fail --silent -b cookies.txt http://127.0.0.1:8000/quiz/1 | grep -q 'Reprendre'
+          docker compose -p qetg-modern-ci exec -T -e LEGACY_DB_HOST=db -e LEGACY_DB_DATABASE=test -e LEGACY_DB_USERNAME=qetg -e LEGACY_DB_PASSWORD=local-development-only app php artisan qetg:import-members
+          count=$(docker compose -p qetg-modern-ci exec -T -e MYSQL_PWD=local-root-only db mysql -uroot -N -s qetg_modern -e "SELECT COUNT(*) FROM users WHERE legacy_id = 1 AND password <> MD5('fixture')")
+          test "$count" = 1
+      - name: Test quiz and account flows on disposable MySQL
+        run: |
+          docker compose -p qetg-modern-ci exec -T -e MYSQL_PWD=local-root-only db mysql -uroot -e "CREATE DATABASE qetg_feature_tests; GRANT ALL PRIVILEGES ON qetg_feature_tests.* TO 'qetg'@'%';"
+          docker compose -p qetg-modern-ci exec -T -e DB_CONNECTION=mysql -e DB_HOST=db -e DB_DATABASE=qetg_feature_tests -e DB_USERNAME=qetg -e DB_PASSWORD=local-development-only app ./vendor/bin/phpunit tests/Feature/OfficialImageTest.php tests/Feature/OfficialQuizPlayTest.php tests/Feature/OfficialQuizCatalogTest.php tests/Feature/MemberPasswordResetTest.php tests/Feature/MemberRegistrationTest.php tests/Feature/MemberProfileTest.php tests/Feature/PublicMemberTest.php tests/Feature/MemberSubscriptionTest.php tests/Feature/MemberReportTest.php tests/Feature/LegacyMemberLoginTest.php
+      - name: Remove isolated containers and database
+        if: always()
+        run: docker compose -p qetg-modern-ci down -v

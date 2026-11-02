@@ -29,8 +29,8 @@
 					<div class="quiz-presentation-class1">
                         <?php
                             if (isset($_SESSION['id'])){
-                                $select_test_prog_nbr = $db->query("SELECT * FROM progression, question, quiz WHERE quiz.id_quiz = quiz_question.id_quiz AND quiz_progression.id_question = quiz_question.id_question AND quiz_progression.id_user = ".$_SESSION['id']." AND quiz_question.id_quiz = ".$select_le_quiz["id_quiz"])->numRows();
-                                $select_test_prog = $db->query("SELECT * FROM progression, question, quiz WHERE quiz.id_quiz = quiz_question.id_quiz AND quiz_progression.id_question = quiz_question.id_question AND quiz_progression.id_user = ".$_SESSION['id']." AND quiz_question.id_quiz = ".$select_le_quiz["id_quiz"])->fetchArray();
+                                $select_test_prog_nbr = $db->query("SELECT * FROM quiz_progression, quiz_question, quiz WHERE quiz.id_quiz = quiz_question.id_quiz AND quiz_progression.id_question = quiz_question.id_question AND quiz_progression.id_user = ".$_SESSION['id']." AND quiz_question.id_quiz = ".$select_le_quiz["id_quiz"])->numRows();
+                                $select_test_prog = $db->query("SELECT * FROM quiz_progression, quiz_question, quiz WHERE quiz.id_quiz = quiz_question.id_quiz AND quiz_progression.id_question = quiz_question.id_question AND quiz_progression.id_user = ".$_SESSION['id']." AND quiz_question.id_quiz = ".$select_le_quiz["id_quiz"])->fetchArray();
                                 if(($select_test_prog_nbr) ==1 and $select_test_prog['numero_question'] != $select_test_prog['nbrQuestion'] ){
                                     echo '<a href="question.php?id_quiz='.$select_le_quiz["id_quiz"].'&numero_question='.$select_test_prog['numero_question'].'" id="quiz-presentation-a1">Cliquer ici pour commencer le quiz</a>';
                                 }else{

@@ -24,9 +24,9 @@
 							$date = date("Y-m-d");
 							if(count($select_cle_identique) == 0){
 								if ($_POST['newletter'] == 1){
-									$insert_cle = $db->query("INSERT INTO quiz_cle (id_cle, cle, cle_login, cle_pass_md5, cle_email, cle_nom, cle_prenom, cle_newletter,cle_date) VALUES (NULL, '".$decrypted_chaine."', '".securisation($_POST['login'])."', '".md5($_POST['pass'])."', '".securisation($_POST['email'])."', '".securisation($_POST['nom'])."', '".securisation($_POST['prenom'])."', ".$_POST['newletter'].", '".$date."')");
+									$insert_cle = $db->query("INSERT INTO quiz_cle (id_cle, cle, cle_login, cle_pass_md5, cle_email, cle_nom, cle_prenom, cle_newletter,cle_date) VALUES (NULL, '".$decrypted_chaine."', '".securisation($_POST['login'])."', '".hacherMotDePasse($_POST['pass'])."', '".securisation($_POST['email'])."', '".securisation($_POST['nom'])."', '".securisation($_POST['prenom'])."', ".$_POST['newletter'].", '".$date."')");
 								}else {
-									$insert_cle = $db->query("INSERT INTO quiz_cle (id_cle, cle, cle_login, cle_pass_md5, cle_email, cle_nom, cle_prenom,cle_date) VALUES (NULL, '".$decrypted_chaine."', '".securisation($_POST['login'])."', '".md5($_POST['pass'])."', '".securisation($_POST['email'])."', '".securisation($_POST['nom'])."', '".securisation($_POST['prenom'])."', '".$date."')");
+									$insert_cle = $db->query("INSERT INTO quiz_cle (id_cle, cle, cle_login, cle_pass_md5, cle_email, cle_nom, cle_prenom,cle_date) VALUES (NULL, '".$decrypted_chaine."', '".securisation($_POST['login'])."', '".hacherMotDePasse($_POST['pass'])."', '".securisation($_POST['email'])."', '".securisation($_POST['nom'])."', '".securisation($_POST['prenom'])."', '".$date."')");
 								}
 							}
 							$mail->addAddress($_POST['email']);

@@ -19,7 +19,7 @@
     }
     if (isset($_SESSION['id'])){
         $select_prog_nbr =$db->query("SELECT * FROM quiz_progression prog WHERE id_user = ".$_SESSION['id']." and id_question in (select id_question from quiz_question, quiz where quiz.id_quiz = quiz_question.id_quiz and quiz.id_quiz = ".$selete_question_du_quiz['id_quiz'].")")->numRows();
-        $select_prog =$db->query("SELECT * quiz_FROM progression prog WHERE id_user = ".$_SESSION['id']." and id_question in (select id_question from quiz_question, quiz where quiz.id_quiz = quiz_question.id_quiz and quiz.id_quiz = ".$selete_question_du_quiz['id_quiz'].")")->fetchArray();
+        $select_prog =$db->query("SELECT * FROM quiz_progression prog WHERE id_user = ".$_SESSION['id']." and id_question in (select id_question from quiz_question, quiz where quiz.id_quiz = quiz_question.id_quiz and quiz.id_quiz = ".$selete_question_du_quiz['id_quiz'].")")->fetchArray();
         if ($select_prog_nbr == 0){
             $insert_prog =$db->query("INSERT INTO `quiz_progression` (`id_user`, `id_question`) VALUES (".$_SESSION['id'].", ".$selete_question_du_quiz['id_question'].")");
         }else{

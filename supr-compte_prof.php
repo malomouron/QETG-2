@@ -2,10 +2,10 @@
 	session_start();
 	include ('functions.php');
 	$db = new db($dbhost, $dbuser, $dbpass, $dbname);
-	if (isset($_POST['pass_supr'])) {
-		$selectPasswordUser = $db->query("SELECT `pass_md5` FROM `quiz_membre` WHERE id = ".$_SESSION['id'])->fetchArray();
+	if (isset($_SESSION['id'], $_POST['pass_supr'])) {
+		$selectPasswordUser = $db->query('SELECT pass_md5 FROM quiz_membre WHERE id = ?', $_SESSION['id'])->fetchArray();
 	}
-	if (isset($_POST['pass_supr']) AND md5($_POST['pass_supr']) == $selectPasswordUser['pass_md5']) {
+	if (isset($selectPasswordUser['pass_md5']) && verifierMotDePasse($_POST['pass_supr'], $selectPasswordUser['pass_md5'])) {
 		$deletMembre = $db->query("DELETE FROM `quiz_membre` WHERE id = ".$_SESSION['id']);
 		echo 	'<!DOCTYPE html>
 				<html>

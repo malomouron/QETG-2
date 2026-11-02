@@ -438,7 +438,7 @@
 							togg2.onclick = togg;
                             function copy(txt){
                                 var text = document.querySelector("#clipbord_temp");
-                                new_value = "'; echo $domaine.'"+"quiz/makeQuiz.php?id_quiz="+txt;
+                                new_value = new URL("makeQuiz.php?id_quiz=" + encodeURIComponent(txt), window.location.href).href;
                                 text.value = new_value;
                                 text.select()
                                 document.execCommand(\'copy\');
@@ -619,7 +619,7 @@
 						<script type="text/javascript">
                             function copy(txt){
                                 var text = document.querySelector("#clipbord_temp");
-                                new_value = "'; echo $domaine.'"+"quiz/makeQuiz.php?id_quiz="+txt;
+                                new_value = new URL("makeQuiz.php?id_quiz=" + encodeURIComponent(txt), window.location.href).href;
                                 text.value = new_value;
                                 text.select()
                                 document.execCommand(\'copy\');

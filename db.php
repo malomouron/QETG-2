@@ -13,6 +13,9 @@
 		public $query_count = 0;
 	
 		public function __construct($dbhost, $dbuser, $dbpass, $dbname, $charset = 'utf8') {
+			if (!is_string($dbname) || trim($dbname) === '') {
+				throw new InvalidArgumentException('Le nom de la base de données ($dbname) doit être configuré dans config.inc.php.');
+			}
 			$this->connection = new mysqli($dbhost, $dbuser, $dbpass, $dbname);
 			if ($this->connection->connect_error) {
 				$this->error('Failed to connect to MySQL - ' . $this->connection->connect_error);

@@ -1,7 +1,7 @@
  <!-- premier bandeau ordi -->
 	<div id="bandeau" class="bandeau">
 	        	<div id="img1">
-	        		<img src="/quiz/commun/icon.png" alt="icon du site" id="img">
+					<img src="commun/icon.png" alt="icon du site" id="img">
 	        	</div>
 	        	<div id="menu">
 	        		<span class="lien-bandeau" >
@@ -78,10 +78,10 @@
 		echo '<a href="profil.php"><li><img src="commun/bouton-profil.png" id="img-prof-ico" alt="bouton profil">Profil</li></a>';
 	}
 ?>
-						<a href="../"><li>Accueil</li></a>
+						<a href="index.php"><li>Accueil</li></a>
                         <a href="quiz_utilisateur.php"><li>Quiz utilisateur</li></a>
                         <a href="poster_quiz.php"><li>Poster des quiz</li></a>
-                        <a href="/quiz/lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
+                        <a href="lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
                         <a href="aide-page.php"><li>Aide</li></a>
 					</ul>
 				</div>
@@ -114,10 +114,10 @@
 		echo '<a href="profil.php"><li><img src="commun/bouton-profil.png" id="img-prof-ico" alt="bouton profil">Profil</li></a>';
 	}
 ?>
-						<a href="../"><li>Accueil</li></a>
+						<a href="index.php"><li>Accueil</li></a>
                         <a href="quiz_utilisateur.php"><li>Quiz utilisateur</li></a>
                         <a href="poster_quiz.php"><li>Poster des quiz</li></a>
-                        <a href="/quiz/lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
+                        <a href="lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
                         <a href="aide-page.php"><li>Aide</li></a>
 					</ul>
 				</div>

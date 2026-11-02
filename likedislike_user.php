@@ -4,8 +4,8 @@
 	$db = new db($dbhost, $dbuser, $dbpass, $dbname);
 	$selectIpLikeupdate = $db->query("SELECT * FROM quiz_like_quiz WHERE id_quiz = ".$_REQUEST['q']." AND '".$_SERVER['REMOTE_ADDR']."' = ip AND likeOrDislike = ".$_REQUEST['l'])->fetchArray();
 	$selectIpLike = $db->query("SELECT count(*) nbr_like_ip FROM quiz_like_quiz WHERE id_quiz = ".$_REQUEST['q']." AND '".$_SERVER['REMOTE_ADDR']."' = ip")->fetchArray();
-	$selectQuizLiked = $db->query("select * from quiz_quiz WHERE id_quiz = '".$_REQUEST['q']."'")->fetchArray();
-	if($selectQuizLiked['quizComplet'] == 1 AND count($selectQuizLiked) > 0) {
+	$selectQuizLiked = $db->query("select * from quiz WHERE id_quiz = '".$_REQUEST['q']."'")->fetchArray();
+	if(count($selectQuizLiked) > 0 AND $selectQuizLiked['quizComplet'] == 1) {
         if (isset($_SESSION['auth']) and $_SESSION['auth'] == 1 and $selectIpLike['nbr_like_ip'] == 0) {
             $insertLikeDislikIp = $db->query("INSERT INTO quiz_like_quiz (id_like, id_quiz, ip, likeOrDislike,esQuizUser) VALUES (NULL, " . $_REQUEST['q'] . ", '" . $_SERVER['REMOTE_ADDR'] . "', " . $_REQUEST['l'] . ", 1)");
         } elseif (isset($_SESSION['auth']) and $_SESSION['auth'] == 1 and count($selectIpLikeupdate) > 0) {

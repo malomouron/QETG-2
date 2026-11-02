@@ -2,8 +2,8 @@
 	session_start();
 	include ('functions.php');
 	$db = new db($dbhost, $dbuser, $dbpass, $dbname);
-	if ($_POST['pass'] == $_POST['pass_confirm'] && isset($_POST['pass'])) {
-		$update_mdp_par_user = $db->query("UPDATE `quiz_membre` SET `pass_md5` = '".md5($_POST['pass'])."' WHERE id = ".$_SESSION['id']);
+	if (isset($_SESSION['id'], $_POST['pass'], $_POST['pass_confirm']) && $_POST['pass'] !== '' && $_POST['pass'] === $_POST['pass_confirm']) {
+		$update_mdp_par_user = $db->query('UPDATE quiz_membre SET pass_md5 = ? WHERE id = ?', hacherMotDePasse($_POST['pass']), $_SESSION['id']);
 		echo 	'<!DOCTYPE html>
 				<html>
 					<head>';

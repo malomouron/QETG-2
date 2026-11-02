@@ -1,0 +1,4 @@
+services:
+  app:
+    volumes:
+      - "${QETG_LEGACY_ASSET_ROOT:?Set QETG_LEGACY_ASSET_ROOT to a copy of the legacy web root}:/legacy-assets:ro"
