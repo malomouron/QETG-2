@@ -28,7 +28,7 @@ cd qetg
      mysql -u votre_utilisateur -p votre_base_de_donnees < chemin/vers/le/modele_de_base.sql
      ```
 
-2. Configurez le fichier `config.inc.php` en remplissant les informations de connexion à la base de données :
+2. Créez le fichier `config.inc.php` à la racine du projet, à côté de `db.php` et `functions.php`, en remplissant les informations de connexion à la base de données :
 
    ```php
    <?php
@@ -52,7 +52,8 @@ cd qetg
 ### Démarrage de l'application
 
 - Assurez-vous que votre serveur web est configuré pour exécuter des scripts PHP.
-- Accédez à votre projet via l'URL locale (ex. : `http://localhost/quiz/`).
+- Accédez à votre projet via l'URL locale correspondant au nom du dossier (ex. : `http://localhost/QETG-2/` pour un dossier `QETG-2`).
+- Les fichiers PHP de connexion sont chargés depuis le dossier du projet ; il n'est pas nécessaire de nommer ce dossier `quiz`.
 
 ### Connexion
 

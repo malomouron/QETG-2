@@ -1,5 +1,5 @@
 <?php
-    include ($_SERVER['DOCUMENT_ROOT'].'/quiz/db.php');
+    require_once __DIR__ . DIRECTORY_SEPARATOR . 'db.php';
     function Genere_Password($size)
         {
             $password_gener = '';
