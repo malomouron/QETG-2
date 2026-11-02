@@ -9,3 +9,4 @@ quiz_perso
 .env
 .env.*
 !.env.example
+composer.phar
