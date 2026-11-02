@@ -1,0 +1,68 @@
+services:
+  app:
+    image: ${QETG_IMAGE:-ghcr.io/malomouron/qetg-2:latest}
+    build:
+      context: .
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.5}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      QETG_ENV_CONFIG: "1"
+      APP_URL: ${APP_URL:-http://localhost:8080/}
+      DB_HOST: db
+      DB_DATABASE: ${DB_DATABASE:-test}
+      DB_USERNAME: ${DB_USERNAME:-qetg}
+      DB_PASSWORD: ${DB_PASSWORD:-local-development-only-change-me}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@example.invalid}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_ENCRYPTION: ${SMTP_ENCRYPTION:-ssl}
+      SMTP_BCC: ${SMTP_BCC:-}
+      RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
+      APP_PRIVATE_KEY: ${APP_PRIVATE_KEY:-}
+      QUIZZES_PER_PAGE: ${QUIZZES_PER_PAGE:-5}
+    ports:
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:80"
+    restart: unless-stopped
+    volumes:
+      - quiz_uploads:/var/www/html/quiz_perso
+      - profile_uploads:/var/www/html/image-profil/image-personaliser
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-test}
+      MYSQL_USER: ${DB_USERNAME:-qetg}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-local-development-only-change-me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-root-only-change-me}
+      MYSQL_ROOT_HOST: "%"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=root --password=$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    volumes:
+      - database:/var/lib/mysql
+
+  demo-import:
+    image: mysql:8.4
+    profiles: ["demo"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:-local-root-only-change-me}
+    volumes:
+      - ./QETG.sql:/schema.sql:ro
+    entrypoint: ["sh", "-c"]
+    command: ["mysql --host=db --user=root < /schema.sql"]
+
+volumes:
+  database:
+  quiz_uploads:
+  profile_uploads:

@@ -23,57 +23,48 @@ L'audit fonctionnel a également relevé :
 
 Ces constats sont issus d'une lecture du code et du schéma, pas d'un audit d'exécution ou d'un audit de sécurité exhaustif.
 
-## Cible technique recommandée
+## Direction retenue
 
-Pour cette application web de taille modeste, privilégier une application monolithique bien structurée :
+Conserver l'application PHP historique et l'améliorer progressivement, par parcours et avec des tests de non-régression. Le socle Laravel parallèle et sa CI ont été abandonnés ; il n'y aura pas de bascule vers un second framework dans cette feuille de route.
 
 | Domaine | Choix recommandé | Raison |
 |---|---|---|
-| Langage | PHP 8.5, avec une montée de version progressive | Version maintenue à la date de rédaction ; elle reçoit les correctifs de sécurité jusqu'au 31 décembre 2029. |
-| Framework | Laravel 13 | Routage, validation, sessions, authentification, migrations et outils de test intégrés ; support PHP 8.3 à 8.5. |
-| Vues | Blade, avec Alpine.js ou Livewire seulement pour les interactions qui le justifient | Conserve le rendu serveur adapté aux parcours actuels ; évite d'ajouter un frontend SPA sans besoin établi. |
-| Base de données | MySQL ou MariaDB dans une version prise en charge par la version choisie de Laravel | Conserve le modèle relationnel actuel, tout en remplaçant les requêtes dispersées par des migrations et des relations explicites. |
-| Dépendances | Composer avec `composer.lock` versionné | Installation reproductible et mises à jour maîtrisées des dépendances PHP. |
-| Qualité | PHPUnit ou Pest, PHPStan/Larastan et Laravel Pint | Tests automatiques, analyse statique et formatage cohérent. |
-| Environnement local | Docker Compose, avec PHP, serveur web et base séparés | Même configuration pour les contributeurs et la CI ; XAMPP peut rester un outil local de transition. |
-| CI | GitHub Actions | Lancer les tests, le formatage, l'analyse statique et les contrôles de dépendances sur chaque pull request. |
-
-**Alternative :** Symfony 7.4 LTS est un choix pertinent si l'équipe connaît déjà Symfony ou privilégie son cycle LTS : le calendrier officiel indique des correctifs de bogues jusqu'en novembre 2028 et de sécurité jusqu'en novembre 2029. Éviter d'installer simultanément Laravel et Symfony ; choisir un seul framework.
-
-Les versions évoluent : vérifier les pages officielles de support juste avant le démarrage et choisir le dernier correctif de la branche retenue.
+| Langage et serveur | PHP avec Apache dans l'image Docker, testé sur PHP 8.2 et 8.5 | Conserver le fonctionnement actuel et rendre les versions vérifiables. |
+| Structure | PHP procédural existant, refactorisé par petits changements | Éviter une réécriture parallèle et réduire le risque de régression. |
+| Base de données | MySQL 8.4 dans Docker Compose ; conserver MySQL/MariaDB pour les installations natives | Utiliser un environnement reproductible sans exposer la base sur l'hôte. |
+| Dépendances | Composer et npm avec leurs fichiers de verrouillage | Installer les bibliothèques externes sans versionner leurs copies. |
+| CI/CD | GitHub Actions et Docker Compose | Tester les deux versions de PHP et publier l'image GHCR depuis `main` après succès. |
+| Déploiement | Mise à jour manuelle de l'image via Docker Compose | Ne pas déployer sur un serveur sans cible ni procédure d'exploitation définies. |
 
 ## Outils à ajouter
 
-### Dès le début
+### En place ou à poursuivre
 
 - **Composer** : manifeste, dépendances et installation reproductible.
-- **PHPUnit ou Pest** : tests des parcours métier et des règles de calcul.
-- **PHPStan avec Larastan** : détection des erreurs de types et d'appels invalides avant exécution.
-- **Laravel Pint** : formatage automatique du code PHP.
-- **GitHub Actions** : exécution obligatoire des contrôles sur les changements proposés.
-- **Docker Compose** : environnement de développement versionné, avec données de démonstration non sensibles.
+- **Tests de caractérisation et HTTP** : étendre progressivement la couverture des parcours historiques.
+- **GitHub Actions et Docker Compose** : construire et tester sur les pull requests, publier l'image après un push validé sur `main`.
+- **Docker Compose** : environnement local avec application, base de données et volumes persistants.
 - **`.env.example`** : liste des paramètres requis, sans secrets ; les valeurs réelles restent dans un `.env` ignoré par Git.
 
 ### À introduire selon le besoin
 
 - **Playwright** pour les tests de bout en bout dans un navigateur, une fois les parcours prioritaires stabilisés.
-- **Rector** pour automatiser certaines transformations de code pendant la migration, avec revue et tests après chaque lot.
 - **Redis et files d'attente** uniquement si l'envoi d'e-mails, les tâches longues ou la charge le justifient.
 - Un stockage objet tel que S3 uniquement si les avatars et images doivent être partagés entre plusieurs serveurs ou sauvegardés séparément.
 
-Ne pas ajouter dès le départ Kubernetes, microservices, un frontend React/Vue indépendant ou Redis sans besoin concret : ces outils augmenteraient l'exploitation et la complexité sans corriger les problèmes structurels actuels.
+Ne pas ajouter dès le départ un framework parallèle, Kubernetes, des microservices, un frontend SPA ou Redis sans besoin concret.
 
 ## Changements d'architecture
 
-1. **Routage explicite** : chaque URL appelle une route nommée, puis un contrôleur ; supprimer les liens construits à la main avec `/quiz/`.
-2. **Responsabilités séparées** : contrôleurs pour le protocole HTTP, modèles pour les données, vues Blade pour l'affichage ; isoler les règles métier du parcours de quiz dans des classes dédiées quand elles sont réutilisées.
-3. **Validation centralisée** : valider toutes les entrées de formulaire avec les règles du framework et présenter des erreurs compréhensibles.
-4. **Accès par rôle et propriété** : définir des policies pour les actions administratives et pour modifier/supprimer uniquement ses propres quiz.
-5. **Base versionnée** : remplacer progressivement les changements manuels de schéma par des migrations ; documenter les relations, contraintes et index.
+1. **Responsabilités séparées** : extraire petit à petit les règles métier réutilisées hors des pages PHP volumineuses, sans déplacer plusieurs parcours à la fois.
+2. **Accès aux données** : réutiliser la couche MySQLi existante et réduire les requêtes SQL dupliquées à mesure que chaque parcours est modifié.
+3. **Validation centralisée** : valider les entrées de chaque formulaire touché et présenter des erreurs compréhensibles.
+4. **Accès par rôle et propriété** : vérifier les autorisations administratives et la propriété des quiz lors de chaque changement de parcours.
+5. **Base documentée** : examiner et tester les changements de schéma avant de les appliquer ; ne pas réimporter le dump d'exemple sur une base existante.
 6. **Opérations atomiques** : enregistrer la création d'un quiz et ses questions/réponses dans une transaction afin d'éviter les objets partiellement créés.
 7. **Gestion des fichiers** : valider type MIME, taille et nom des fichiers, stocker hors des chemins codés en dur et ne jamais faire confiance au nom envoyé par le navigateur.
 8. **Erreurs et journaux** : afficher une page d'erreur utilisateur non technique, journaliser le détail côté serveur et ne pas continuer après une configuration de base de données invalide.
-9. **Mot de passe et sessions** : migrer les anciens mots de passe lors d'une connexion validée vers le hachage pris en charge par le framework ; ne pas conserver le mécanisme MD5.
+9. **Mot de passe et sessions** : conserver le hachage moderne en place et supprimer les compatibilités MD5 résiduelles au fil des parcours vérifiés.
 10. **Accessibilité et interface** : assurer navigation clavier, labels, contrastes et retours de validation ; harmoniser les composants et rendre les textes traduisibles sans dupliquer les pages.
 
 ## Feuille de route par étapes
@@ -88,8 +79,8 @@ Ne pas ajouter dès le départ Kubernetes, microservices, un frontend React/Vue 
 
 ### Étape 1 — Sécuriser le socle existant
 
-- Premiers tests de caractérisation en place : chargement indépendant du dossier, fonctions utilitaires et logique de publication ; exécutables avec `php tests/characterization.php`, sans accès à la base réelle. La CI les lance sur PHP 8.2 et 8.5 et vérifie la syntaxe des fichiers PHP du projet. Cela ne valide pas encore les parcours complets ni la compatibilité fonctionnelle avec PHP 8.5.
-- Premiers tests HTTP avec MySQL isolé : accueil, jeu et progression, création/modification/suppression de quiz, comptes et récupération de mot de passe, favoris, réactions, abonnements, commentaires et signalements. Le transport e-mail est simulé ; les autres parcours restent à couvrir. Les conteneurs n'exposent pas de port de base sur l'hôte et n'utilisent pas la base XAMPP.
+- Tests de caractérisation en place : chargement indépendant du dossier, fonctions utilitaires et logique de publication. La CI les exécute dans Docker Compose sur PHP 8.2 et 8.5 et vérifie la syntaxe des fichiers PHP.
+- Tests HTTP avec MySQL isolé en place : accueil, jeu et progression, création/modification/suppression de quiz, comptes et récupération de mot de passe, favoris, réactions, abonnements, commentaires et signalements. Le transport e-mail est simulé ; d'autres parcours restent à couvrir. Les conteneurs n'exposent pas de port de base sur l'hôte et n'utilisent pas la base XAMPP.
 - Les tests ont accompagné la correction de requêtes de progression de quiz et du contrôle du mot de passe lors de la connexion par login. Les mots de passe MD5 historiques sont convertis après une connexion réussie ; les inscriptions, changements et réinitialisations utilisent un hachage moderne.
 - Les paramètres SMTP sont à configurer localement dans `config.inc.php`. Un ancien identifiant présent dans le code doit être révoqué ou renouvelé côté fournisseur, car il peut rester dans l'historique Git.
 - Les tests ont aussi accompagné la correction de la table utilisée par les réactions aux quiz membres et de la perte de description lors de la modification d'un quiz sans nouvelle image.
@@ -103,27 +94,19 @@ Ne pas ajouter dès le départ Kubernetes, microservices, un frontend React/Vue 
 
 **Résultat attendu :** comportement de référence documenté, problèmes visibles et tests anti-régression de base.
 
-### Étape 2 — Créer le nouveau socle
+### Étape 2 — Conteneuriser l'application existante
 
-- Un squelette Laravel 13 séparé est disponible dans `modern/`, avec Compose, une base locale dédiée et des tests. Les quiz officiels peuvent être importés et joués ; les comptes de recette peuvent se connecter, reprendre un quiz, importer leurs résultats et progressions officiels et gérer leurs favoris. Les comptes, mots de passe, résultats et progressions ne sont pas synchronisés avec l'ancien site.
-- Les images référencées par les quiz officiels peuvent être copiées depuis une copie de fichiers montée en lecture seule et affichées dans le catalogue et le parcours de jeu. Les autres fichiers, notamment les images des quiz membres et les avatars, restent à migrer.
-- La récupération du mot de passe des comptes importés utilise un lien à usage unique et un transport e-mail à configurer ; les changements ne sont pas synchronisés avec le site historique.
-- L'inscription de recette demande une confirmation par e-mail avant de créer le compte et conserve la préférence newsletter ; la protection anti-robot et l'envoi de newsletters restent à migrer.
-- Les membres peuvent modifier leurs informations et leur mot de passe ou supprimer leur compte dans le nouveau profil ; la suppression n'agit pas sur le site historique et les comptes supprimés ne sont pas réimportés. La vérification d'une nouvelle adresse e-mail et les avatars restent à réaliser.
-- L'aide dispose d'une recherche simple et la page « Sortie Ciné » reprend la sélection historique ; les lecteurs externes ne sont chargés qu'à la demande.
-- Un répertoire permet de rechercher des membres et de consulter leurs résultats officiels publics, sans exposer leurs coordonnées privées.
-- Les abonnements aux membres peuvent être importés, consultés et modifiés ; un réimport ne réactive pas les désabonnements effectués sur la nouvelle version.
-- Les signalements de membres peuvent être importés et classés dans une première interface de modération réservée aux administrateurs explicitement autorisés ; les autres fonctions d'administration restent à migrer.
-- Créer le projet Laravel 13 séparément de l'ancien code, avec Composer, Docker Compose, migrations, tests, analyse statique et CI.
-- Reproduire le schéma de données utile dans les migrations et ajouter des commandes/imports vérifiables pour les données existantes.
-- Configurer une authentification maintenue par le framework ; migrer les mots de passe historiques au moment d'une connexion réussie.
-- Définir les routes, les rôles, la validation et les politiques d'accès avant de déplacer les écrans.
+- Construire l'image PHP/Apache à partir du dépôt et installer Composer/npm dans des étapes de build verrouillées.
+- Utiliser Docker Compose pour l'application historique, MySQL et les volumes persistants des données téléversées.
+- Garder la base hors des ports hôte et ne jamais importer automatiquement `QETG.sql`.
+- Exécuter caractérisation, lint et tests HTTP/MySQL dans la même configuration Compose sur PHP 8.2 et 8.5.
+- Publier l'image GHCR uniquement après succès sur `main` ; effectuer les mises à jour de serveur manuellement.
 
-**Résultat attendu :** application vide mais installable et testée de façon identique sur un poste local et dans la CI.
+**Résultat attendu :** environnement local reproductible, contrôles CI verts et image versionnée disponible pour déploiement.
 
-### Étape 3 — Migrer par parcours complets
+### Étape 3 — Améliorer le code historique par petits lots
 
-Ordre conseillé :
+Ordre conseillé, un parcours et un objectif à la fois :
 
 1. catalogue, recherche, présentation et participation aux quiz ;
 2. création, modification, publication et suppression des quiz utilisateurs ;
@@ -131,24 +114,22 @@ Ordre conseillé :
 4. favoris, réactions, abonnements, commentaires et signalements ;
 5. administration, e-mails, newsletter, aide et pages d'information.
 
-Chaque lot doit inclure ses écrans, règles métier, permissions, migrations nécessaires et tests. Ne pas maintenir deux versions concurrentes d'une même fonctionnalité au-delà de la période de migration.
+Chaque lot doit partir d'un comportement caractérisé, inclure ses tests et préserver les autres parcours. Ne pas créer de seconde implémentation en parallèle.
 
-**Résultat attendu :** chaque parcours prioritaire fonctionne dans le nouveau socle et possède des tests.
+**Résultat attendu :** le code historique devient progressivement plus lisible et chaque changement est protégé par des tests.
 
-### Étape 4 — Basculer et retirer l'ancien code
+### Étape 4 — Livrer et vérifier les changements
 
-- Comparer les résultats et les données de l'ancien site et du nouveau sur un jeu de données de test.
-- Tester une restauration de sauvegarde et un retour arrière avant la mise en ligne.
-- Déployer d'abord en environnement de recette, puis migrer la production avec une fenêtre et un plan de retour arrière.
-- Supprimer les pages et dépendances historiques seulement après validation des parcours équivalents.
-- Mettre à jour la documentation d'installation et les consignes d'exploitation.
+- Faire passer la pull request par la CI Compose avant toute intégration.
+- Mettre à jour l'image sur le serveur avec la procédure Compose documentée et vérifier la sauvegarde de la base et des fichiers téléversés.
+- Conserver un retour arrière vers le tag d'image précédent.
 
-**Résultat attendu :** déploiement reproductible, sauvegardes vérifiées et ancien code retiré sans perte fonctionnelle.
+**Résultat attendu :** livraison traçable et retour arrière possible sans remplacer l'application par un framework parallèle.
 
 ## Critères d'acceptation
 
 - Un nouveau développeur peut démarrer le projet à partir de la documentation, sans chemin XAMPP codé en dur.
-- Les tests et l'analyse statique passent automatiquement avant qu'un changement soit accepté.
+- Les tests Docker Compose passent automatiquement avant qu'un changement soit accepté.
 - Les parcours retenus ont des tests couvrant au minimum leurs cas nominaux, erreurs de validation et permissions.
 - Aucun secret, mot de passe utilisateur ou configuration de production n'est stocké dans Git.
 - Les actions de création/modification/suppression ne sont accessibles qu'aux utilisateurs autorisés.
@@ -159,5 +140,3 @@ Chaque lot doit inclure ses écrans, règles métier, permissions, migrations n�
 Calendriers consultés le 2 novembre 2026 :
 
 - [Versions PHP prises en charge](https://www.php.net/supported-versions.php) — PHP 8.5 est maintenu avec des correctifs actifs jusqu'au 31 décembre 2027 et de sécurité jusqu'au 31 décembre 2029.
-- [Politique de versions Laravel](https://laravel.com/docs/releases) — Laravel 13 prend en charge PHP 8.3 à 8.5 ; les correctifs de sécurité sont annoncés jusqu'au 17 mars 2028.
-- [Versions et support Symfony](https://symfony.com/releases) — Symfony 7.4 LTS est maintenu pour les bogues jusqu'en novembre 2028 et pour la sécurité jusqu'en novembre 2029.

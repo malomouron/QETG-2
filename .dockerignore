@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+config.inc.php
+composer.lock.tmp
+vendor
+node_modules
+PHPMailer
+api-client-php-master
+quiz_perso
+image-profil/image-personaliser
+tests
+QETG.sql
