@@ -1,5 +1,5 @@
 <?php
-	include ($_SERVER['DOCUMENT_ROOT'].'/quiz/config.inc.php');
+	require_once __DIR__ . DIRECTORY_SEPARATOR . 'config.inc.php';
 	$dbpass = $password;
 	$dbuser = $username;
 	$dbhost = $servername;
