@@ -4,10 +4,8 @@ QETG est une application de quiz simple et personnalisable, développée en PHP.
 
 ## Prérequis
 
-- **PHP** avec les extensions MySQLi et OpenSSL ; les vérifications automatisées utilisent PHP 8.2 et 8.5
-- **MySQL** ou **MariaDB** pour la base de données
-- **Apache** ou tout autre serveur web compatible avec PHP
-- **Composer** pour les dépendances PHP et **Node.js/npm** pour les dépendances JavaScript
+- **Docker Engine** et **Docker Compose v2** pour le démarrage recommandé
+- Pour une installation native/XAMPP : PHP 8.2 ou 8.5 avec MySQLi et OpenSSL, MySQL/MariaDB, Composer, Node.js/npm et Apache ou un serveur PHP compatible
 
 ## Installation
 
@@ -16,13 +14,37 @@ QETG est une application de quiz simple et personnalisable, développée en PHP.
 ```bash
 git clone https://github.com/malomouron/QETG-2.git
 cd QETG-2
+```
+
+### 2. Démarrer avec Docker Compose
+
+Copiez `.env.example` vers `.env`, remplacez les mots de passe d'exemple, puis lancez l'application :
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build -d
+```
+
+Le site écoute sur `http://localhost:8080`. La base et les images téléversées sont conservées dans des volumes Docker. La base est vide au premier démarrage. Pour une démonstration isolée, le profil `demo` importe `QETG.sql` :
+
+```powershell
+docker compose --profile demo run --rm demo-import
+```
+
+**Attention :** `QETG.sql` contient des instructions `DROP TABLE` et sélectionne la base `test`. N'utilisez l'import de démonstration que sur une base jetable, jamais sur une base contenant des données à conserver. `docker compose down` conserve les volumes ; `docker compose down --volumes` les supprime.
+
+### Installation native/XAMPP
+
+Pour une installation native, installez les dépendances après chaque clone ou récupération propre :
+
+```bash
 composer install
 npm ci
 ```
 
-Les dépendances sont verrouillées dans `composer.lock` et `package-lock.json`. Ne modifiez pas les copies installées dans `vendor/` ou `node_modules/` ; les pages historiques chargent directement les bibliothèques nécessaires depuis ces dossiers.
+Les versions sont verrouillées dans `composer.lock` et `package-lock.json`. Les fichiers de configuration et secrets ne doivent pas être ajoutés à Git.
 
-### 2. Configuration de la base de données
+#### Configuration de la base de données
 
 1. Pour une installation de démonstration isolée uniquement, importez le fichier [`QETG.sql`](QETG.sql) avec MySQL ou phpMyAdmin.
 
@@ -67,7 +89,6 @@ Les connexions à un hachage bcrypt refusent les mots de passe de plus de 72 oct
 ### Démarrage de l'application
 
 - Assurez-vous que votre serveur web est configuré pour exécuter des scripts PHP.
-- Installez les dépendances avec `composer install` et `npm ci` après chaque récupération propre du dépôt.
 - Accédez à votre projet via l'URL locale correspondant au nom du dossier (ex. : `http://localhost/QETG-2/` pour un dossier `QETG-2`).
 - Les fichiers PHP de connexion sont chargés depuis le dossier du projet ; il n'est pas nécessaire de nommer ce dossier `quiz`.
 
@@ -83,23 +104,27 @@ Utilisez les identifiants créés au préalable dans la base de données.
 - Autre...
 
 L'inventaire des fonctionnalités par domaine métier et les limites observées sont documentés dans [FONCTIONNALITES.md](FONCTIONNALITES.md).
-Les recommandations d'outillage et la feuille de route sont décrites dans [PLAN_MODERNISATION.md](PLAN_MODERNISATION.md).
+La feuille de route décrit maintenant une évolution incrémentale de l'application historique, sans socle parallèle.
 
-Un premier socle Laravel isolé se trouve dans [`modern/`](modern/README.md). Il ne remplace pas encore le site historique et ne contient pas les parcours métier.
+### CI/CD et déploiement
+
+Chaque pull request et chaque push vérifient la configuration Compose, construisent l'application et exécutent les tests sur PHP 8.2 et 8.5. Après un push validé sur `main`, l'image est publiée sur GitHub Container Registry sous `ghcr.io/malomouron/qetg-2:latest` et avec un tag de commit.
+
+Le déploiement reste manuel : configurez `.env` sur le serveur, authentifiez-vous à GHCR, puis exécutez `docker compose pull app` et `docker compose up -d --no-build`. Configurez `APP_URL` et des mots de passe uniques avant toute exposition hors machine locale.
 
 ### Tests de caractérisation
 
 Depuis la racine du projet, exécutez `php tests/characterization.php`. Sous XAMPP, utilisez par exemple `C:\xampp\php\php.exe tests\characterization.php`.
 Ces premiers tests vérifient le chargement de la configuration et quelques règles existantes sans utiliser de base de données réelle. Ils ne couvrent pas encore les parcours complets du site.
 
-Des tests HTTP et MySQL isolés sont également disponibles avec Docker Compose :
+Les tests de caractérisation, la vérification de syntaxe et les tests HTTP/MySQL isolés s'exécutent dans le même environnement Docker Compose :
 
 ```powershell
-docker compose -p qetg-tests-mon-identifiant -f tests\compose.integration.yml up --build --abort-on-container-exit --exit-code-from integration
-docker compose -p qetg-tests-mon-identifiant -f tests\compose.integration.yml down
+docker compose -p qetg-tests -f compose.yml -f tests\compose.integration.yml up --build --abort-on-container-exit --exit-code-from app
+docker compose -p qetg-tests -f compose.yml -f tests\compose.integration.yml down --volumes --remove-orphans
 ```
 
-Choisissez un identifiant de projet Docker unique. La base des tests fonctionne dans un conteneur temporaire en mémoire, sans port publié ni accès à la base XAMPP ; son schéma est réinitialisé à chaque démarrage. N'utilisez jamais cette configuration pour vos données réelles.
+La base des tests est indépendante de la base locale et le projet Compose utilise un nom séparé. La configuration de test importe le SQL de démonstration dans ce volume isolé ; utilisez `down --volumes` pour le supprimer après les tests.
 
 ## Support
 

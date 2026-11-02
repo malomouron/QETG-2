@@ -1,24 +1,16 @@
 services:
-  db:
-    image: mysql:8.4
+  app:
+    command: ["sh", "/var/www/html/tests/run-ci.sh"]
     environment:
+      QETG_ENV_CONFIG: "0"
+      DB_PASSWORD: local-development-only-change-me
+    restart: "no"
+    volumes:
+      - ./tests:/var/www/html/tests:ro
+  db:
+    environment:
+      MYSQL_PASSWORD: local-development-only-change-me
       MYSQL_ROOT_PASSWORD: disposable-test-only
       MYSQL_ROOT_HOST: "%"
-    tmpfs:
-      - /var/lib/mysql
     volumes:
-      - ../QETG.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent && mysql -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1 FROM test.quiz LIMIT 1'"]
-      interval: 3s
-      timeout: 5s
-      retries: 60
-  integration:
-    build:
-      context: ..
-      dockerfile: tests/integration.Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ..:/workspace:ro
+      - ./QETG.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro

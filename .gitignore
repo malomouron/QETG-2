@@ -6,3 +6,6 @@ PHPMailer
 quiz_perso
 /vendor/
 /node_modules/
+.env
+.env.*
+!.env.example

@@ -40,7 +40,7 @@ function requestPage($path, $post = null, $cookie = '', $upload = null)
     }
     $options['header'] = implode("\r\n", $headers);
     $body = file_get_contents('http://127.0.0.1:8123/' . $path, false, stream_context_create(array('http' => $options)));
-    $responseHeaders = http_get_last_response_headers();
+    $responseHeaders = isset($http_response_header) ? $http_response_header : array();
     if ($body === false || !isset($responseHeaders[0])) {
         throw new RuntimeException('Request failed: ' . $path);
     }
