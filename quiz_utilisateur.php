@@ -5,8 +5,8 @@
 ?>
 <html>
     <head>
-        <link rel="stylesheet" type="text/css" href="commun/slick/slick.css"/>
-        <link rel="stylesheet" type="text/css" href="commun/slick/slick-theme.css"/>
+        <link rel="stylesheet" type="text/css" href="node_modules/slick-carousel/slick/slick.css"/>
+        <link rel="stylesheet" type="text/css" href="node_modules/slick-carousel/slick/slick-theme.css"/>
 <?php
 	$_SESSION['auth'] = 1;
 	$css = array("css.css", "commun/bandeau.css");
@@ -560,9 +560,9 @@
 		</div>
         <div id="poster_quiz-menu-droit"></div>
 
-        <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-        <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-        <script type="text/javascript" src="commun/slick/slick.min.js"></script>
+        <script type="text/javascript" src="node_modules/jquery-legacy-1-11-0/dist/jquery.min.js"></script>
+        <script type="text/javascript" src="node_modules/jquery-migrate-legacy/dist/jquery-migrate.min.js"></script>
+        <script type="text/javascript" src="node_modules/slick-carousel/slick/slick.min.js"></script>
 
         <script type="text/javascript">
             $('.slider-profil').slick({

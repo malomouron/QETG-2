@@ -1,0 +1,8 @@
+{
+    "name": "malomouron/qetg-2",
+    "description": "Legacy PHP application dependencies for Quiz En Tout Genre",
+    "type": "project",
+    "require": {
+        "phpmailer/phpmailer": "^6.10"
+    }
+}

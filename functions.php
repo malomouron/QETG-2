@@ -48,6 +48,8 @@
 
     function afficher_head($title, $fichiers_css, $charset)
         {
+            global $domaine;
+
             echo '<title>'.$title.'</title>
             ';
             echo '<meta charset="'.$charset.'">
@@ -62,7 +64,7 @@
                 ';
             }
             echo '
-            <script type="text/javascript" src="tarteaucitron/tarteaucitron.js"></script>
+            <script type="text/javascript" src="'.rtrim($domaine, '/').'/node_modules/tarteaucitronjs/tarteaucitron.js"></script>
     
             <script type="text/javascript">
             tarteaucitron.init({

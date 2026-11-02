@@ -30,7 +30,7 @@
 					<head>';
 		$css = array("profil.css", "commun/bandeau.css", "css.css");
 		afficher_head("Profil", $css, "UTF-8");
-		echo'			<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		echo'			<script type="text/javascript" src="node_modules/jquery-legacy-1-9-1/jquery.min.js"></script>
 						<script language="JavaScript">
 							function afficherChangerImage() {
 								var a = document.getElementById("img-prof");
@@ -74,8 +74,8 @@
 								display: none;
 							}
 						</style>
-						<link rel="stylesheet" type="text/css" href="commun/image-picker/image-picker.css">
-						<script src="commun/image-picker/image-picker.js" type="text/javascript"></script>
+						<link rel="stylesheet" type="text/css" href="node_modules/image-picker/image-picker/image-picker.css">
+						<script src="node_modules/image-picker/image-picker/image-picker.js" type="text/javascript"></script>
 						<script type="text/javascript">
                             function lang_change(){
                                 var select_lang = document.getElementById("lang").value;
@@ -369,7 +369,7 @@
 							</form>	
                             <input id="clipbord_temp" type="text">
 						</div>
-						<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+						<script src="node_modules/jquery/dist/jquery.min.js"></script>
 						<script type="text/javascript">
 							$(document).ready(function(){
 								$(\'.show-password\').click(function() {
@@ -473,7 +473,7 @@
 					<head>';
         $css = array("profil.css", "commun/bandeau.css", "css.css");
         afficher_head("Profil", $css, "UTF-8");
-        echo'			<script src="commun/image-picker/image-picker.js" type="text/javascript"></script>
+        echo'			<script src="node_modules/image-picker/image-picker/image-picker.js" type="text/javascript"></script>
 					</head>
 					<body>';
         include ("bandeau.php");
@@ -615,7 +615,7 @@
         }
         echo '	            </fieldset><br><br>
 						</div>
-						<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+						<script src="node_modules/jquery/dist/jquery.min.js"></script>
 						<script type="text/javascript">
                             function copy(txt){
                                 var text = document.querySelector("#clipbord_temp");

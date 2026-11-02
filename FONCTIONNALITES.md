@@ -74,7 +74,7 @@ Les principales catégories d'utilisateur visibles dans le code sont le visiteur
 
 - Le site comprend des formulaires de contact/commentaire, une gestion de newsletter et des fonctionnalités d'envoi d'e-mail (`envoyer-mail.php`, `afficher-commentaire.php`, `newletter.php`, `mail.php`).
 - Des pages d'aide et de présentation du site sont présentes (`aide-page.php`, `aide.php`, `lien-bandeau/`).
-- L'interface inclut une bannière de gestion des cookies avec Tarteaucitron et des services Google/reCAPTCHA configurés dans le code (`functions.php`, `tarteaucitron/`).
+- L'interface inclut une bannière de gestion des cookies avec Tarteaucitron et des services Google/reCAPTCHA configurés dans le code (`functions.php`, dépendance npm `tarteaucitronjs`).
 - Un lien de don externe est proposé depuis le profil (`profil.php`).
 
 ## Configuration et limites de l'inventaire
