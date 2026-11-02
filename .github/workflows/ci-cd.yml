@@ -21,10 +21,10 @@ jobs:
         run: docker compose config --quiet
       - name: Build and test the legacy application with Compose
         run: |
-          docker compose -p qetg-ci-${{ matrix.php-version }} -f compose.yml -f tests/compose.integration.yml up --build --abort-on-container-exit --exit-code-from app
+          docker compose -p qetg-ci -f compose.yml -f tests/compose.integration.yml up --build --abort-on-container-exit --exit-code-from app
       - name: Remove test containers and volumes
         if: always()
-        run: docker compose -p qetg-ci-${{ matrix.php-version }} -f compose.yml -f tests/compose.integration.yml down --volumes --remove-orphans
+        run: docker compose -p qetg-ci -f compose.yml -f tests/compose.integration.yml down --volumes --remove-orphans
 
   publish:
     needs: checks
