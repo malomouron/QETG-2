@@ -4,3 +4,5 @@ Perso
 config.inc.php
 PHPMailer
 quiz_perso
+/vendor/
+/node_modules/

@@ -66,12 +66,10 @@ try {
             throw new RuntimeException('Unable to copy fixture: ' . $file);
         }
     }
-    expect(mkdir($directory . '/PHPMailer', 0700), 'Unable to create fixture mail directory.');
-    expect(mkdir($directory . '/PHPMailer/src', 0700), 'Unable to create fixture mail source directory.');
+    expect(mkdir($directory . '/vendor', 0700), 'Unable to create fixture vendor directory.');
     expect(mkdir($directory . '/quiz_perso', 0700), 'Unable to create fixture uploads directory.');
-    expect(copy($root . '/tests/fixtures/FakePHPMailer.php', $directory . '/PHPMailer/src/PHPMailer.php'), 'Unable to copy fake mail transport.');
-    expect(file_put_contents($directory . '/PHPMailer/src/Exception.php', '<?php') !== false, 'Unable to prepare fake mail exception.');
-    expect(file_put_contents($directory . '/PHPMailer/src/SMTP.php', '<?php') !== false, 'Unable to prepare fake SMTP.');
+    expect(copy($root . '/tests/fixtures/FakePHPMailer.php', $directory . '/vendor/FakePHPMailer.php'), 'Unable to copy fake mail transport.');
+    expect(file_put_contents($directory . '/vendor/autoload.php', "<?php\nrequire_once __DIR__ . '/FakePHPMailer.php';\n") !== false, 'Unable to prepare fake Composer autoloader.');
     putenv('QETG_TEST_OUTBOX=' . $directory . '/outbox.html');
     $config = <<<'PHP'
 <?php
@@ -347,8 +345,8 @@ PHP;
     if (is_file($configPath)) {
         unlink($configPath);
     }
-    foreach (array('PHPMailer.php', 'Exception.php', 'SMTP.php') as $file) {
-        $path = $directory . '/PHPMailer/src/' . $file;
+    foreach (array('FakePHPMailer.php', 'autoload.php') as $file) {
+        $path = $directory . '/vendor/' . $file;
         if (is_file($path)) {
             unlink($path);
         }
@@ -356,11 +354,8 @@ PHP;
     if (is_file($directory . '/outbox.html')) {
         unlink($directory . '/outbox.html');
     }
-    if (is_dir($directory . '/PHPMailer/src')) {
-        rmdir($directory . '/PHPMailer/src');
-    }
-    if (is_dir($directory . '/PHPMailer')) {
-        rmdir($directory . '/PHPMailer');
+    if (is_dir($directory . '/vendor')) {
+        rmdir($directory . '/vendor');
     }
     if (is_dir($directory . '/quiz_perso')) {
         foreach (new DirectoryIterator($directory . '/quiz_perso') as $file) {

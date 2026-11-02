@@ -7,7 +7,7 @@ QETG est une application de quiz simple et personnalisable, développée en PHP.
 - **PHP** avec les extensions MySQLi et OpenSSL ; les vérifications automatisées utilisent PHP 8.2 et 8.5
 - **MySQL** ou **MariaDB** pour la base de données
 - **Apache** ou tout autre serveur web compatible avec PHP
-- **Composer** (facultatif, selon la gestion des dépendances)
+- **Composer** pour les dépendances PHP et **Node.js/npm** pour les dépendances JavaScript
 
 ## Installation
 
@@ -16,7 +16,11 @@ QETG est une application de quiz simple et personnalisable, développée en PHP.
 ```bash
 git clone https://github.com/malomouron/QETG-2.git
 cd QETG-2
+composer install
+npm ci
 ```
+
+Les dépendances sont verrouillées dans `composer.lock` et `package-lock.json`. Ne modifiez pas les copies installées dans `vendor/` ou `node_modules/` ; les pages historiques chargent directement les bibliothèques nécessaires depuis ces dossiers.
 
 ### 2. Configuration de la base de données
 
@@ -63,6 +67,7 @@ Les connexions à un hachage bcrypt refusent les mots de passe de plus de 72 oct
 ### Démarrage de l'application
 
 - Assurez-vous que votre serveur web est configuré pour exécuter des scripts PHP.
+- Installez les dépendances avec `composer install` et `npm ci` après chaque récupération propre du dépôt.
 - Accédez à votre projet via l'URL locale correspondant au nom du dossier (ex. : `http://localhost/QETG-2/` pour un dossier `QETG-2`).
 - Les fichiers PHP de connexion sont chargés depuis le dossier du projet ; il n'est pas nécessaire de nommer ce dossier `quiz`.
 

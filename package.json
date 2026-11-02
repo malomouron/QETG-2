@@ -1,0 +1,14 @@
+{
+    "name": "qetg-2",
+    "private": true,
+    "description": "Front-end dependencies for the legacy QETG application",
+    "dependencies": {
+        "image-picker": "0.3.1",
+        "jquery": "3.2.1",
+        "jquery-legacy-1-9-1": "npm:jquery@1.9.1",
+        "jquery-legacy-1-11-0": "npm:jquery@1.11.0",
+        "jquery-migrate-legacy": "npm:jquery-migrate@1.2.1",
+        "slick-carousel": "1.8.0",
+        "tarteaucitronjs": "1.9.0"
+    }
+}
