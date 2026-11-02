@@ -39,6 +39,7 @@
 		if(!$mail->send()) {
 			echo 'Erreur, message non envoyé.';
 			echo 'Mailer Error: ' . $mail->ErrorInfo;
+			exit;
 		}
 		
 		
@@ -62,7 +63,7 @@
 						</div>
 					</body>
 				</html>';
-		$update_new_mdp = $db->query("UPDATE `quiz_membre` SET pass_md5 = '".md5($newpwd)."' WHERE id = ".$select_le_membre['id']);
+		$update_new_mdp = $db->query('UPDATE quiz_membre SET pass_md5 = ? WHERE id = ?', hacherMotDePasse($newpwd), $select_le_membre['id']);
 	} else {
 		echo '	<html>
 				<head>';

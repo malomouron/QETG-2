@@ -575,7 +575,7 @@
             });
             function copy(txt){
                 var text = document.querySelector("#clipbord_temp");
-                new_value = "<?php echo $domaine; ?>"+"quiz/makeQuiz.php?id_quiz="+txt;
+                new_value = new URL("makeQuiz.php?id_quiz=" + encodeURIComponent(txt), window.location.href).href;
                 text.value = new_value;
                 text.select()
                 document.execCommand('copy');

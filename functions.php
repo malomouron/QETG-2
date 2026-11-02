@@ -1,5 +1,35 @@
 <?php
     require_once __DIR__ . DIRECTORY_SEPARATOR . 'db.php';
+    function verifierMotDePasse($password, $storedHash)
+        {
+            if (preg_match('/\A[0-9a-f]{32}\z/i', $storedHash)) {
+                return hash_equals(strtolower($storedHash), md5($password));
+            }
+            if (password_get_info($storedHash)['algoName'] === 'bcrypt' && strlen($password) > 72) {
+                return false;
+            }
+            return password_verify($password, $storedHash);
+        }
+
+    function hacherMotDePasse($password)
+        {
+            $algorithm = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
+            if ($algorithm === PASSWORD_DEFAULT && strlen($password) > 72) {
+                throw new RuntimeException('Argon2id est requis pour hacher un mot de passe de plus de 72 octets.');
+            }
+            $hash = password_hash($password, $algorithm);
+            if ($hash === false) {
+                throw new RuntimeException('Impossible de hacher le mot de passe.');
+            }
+            return $hash;
+        }
+
+    function motDePasseDoitEtreRehache($hash)
+        {
+            $algorithm = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
+            return password_needs_rehash($hash, $algorithm);
+        }
+
     function Genere_Password($size)
         {
             $password_gener = '';
@@ -8,7 +38,8 @@
 
             for($i=0;$i<$size;$i++)
             {
-                $password_gener .= ($i%2) ? strtoupper($characters[array_rand($characters)]) : $characters[array_rand($characters)];
+                $character = $characters[random_int(0, count($characters) - 1)];
+                $password_gener .= ($i%2) ? strtoupper($character) : $character;
             }
 
             return $password_gener;

@@ -50,7 +50,7 @@
 ?>
 						<a href="quiz_utilisateur.php"><li>Quiz utilisateur</li></a>
 						<a href="poster_quiz.php"><li>Poster des quiz</li></a>
-						<a href="/lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
+						<a href="lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
 						<a href="aide-page.php"><li>Aide</li></a>
 					</ul>
 				</div>
@@ -84,7 +84,7 @@
 ?>
                         <a href="quiz_utilisateur.php"><li>Quiz utilisateur</li></a>
                         <a href="poster_quiz.php"><li>Poster des quiz</li></a>
-						<a href="/quiz/lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
+						<a href="lien-bandeau/"><li>À propos de Quiz dans tout genre</li></a>
 						<a href="aide-page.php"><li>Aide</li></a>
 					</ul>
 				</div>

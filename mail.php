@@ -1,49 +1,29 @@
 <?php
-	use PHPMailer\PHPMailer\PHPMailer;
-	use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 
-	require 'PHPMailer/src/Exception.php';
-	require 'PHPMailer/src/PHPMailer.php';
-	require 'PHPMailer/src/SMTP.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'config.inc.php';
 
-	$mail = new PHPmailer();
+foreach (array('smtp_host', 'smtp_username', 'smtp_password', 'smtp_from') as $parameter) {
+    if (!isset($$parameter) || !is_string($$parameter) || $$parameter === '') {
+        http_response_code(500);
+        throw new RuntimeException('Paramètre SMTP manquant dans config.inc.php : ' . $parameter);
+    }
+}
 
-// $mail->SMTPDebug = 1;
- 
-	$mail->isSMTP(); // Paramétrer le Mailer pour utiliser SMTP 
-	$mail->Host = 'ssl0.ovh.net'; // Spécifier le serveur SMTP
-	$mail->SMTPAuth = true; // Activer authentication SMTP
-	$mail->Username = 'admin@malomouron.fr'; // Votre adresse email d'envoi
-	$mail->Password = 'LAdresseCompteAdminIsBest!!2'; // Le mot de passe de cette adresse email
-	$mail->SMTPSecure = 'ssl'; // Accepter SSL
-	$mail->Port = 465;
-	$mail->setFrom('admin@malomouron.fr', 'Quiz En Tout Genre'); // Personnaliser l'envoyeur
-	$mail->addReplyTo('admin@malomouron.fr', ''); // L'adresse de réponse
-	$mail->isHTML(true); // Paramétrer le format des emails en HTML ou non
-	$mail->AltBody = '';
-	$mail->addBCC('admin@malomouron.fr');
-	
-/*
+require_once __DIR__ . '/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/PHPMailer/src/SMTP.php';
 
-	$mail->addAddress('malo.mouron@gmail.com', 'Malo Mouron'); // Ajouter le destinataire
-//	$mail->addAddress('To2@example.com'); 
-	$mail->addCC('fabrice.mouron@gmail.com');
-	
-
-//	$mail->addAttachment('/var/tmp/file.tar.gz'); // Ajouter un attachement
-//	$mail->addAttachment('/tmp/image.jpg', 'new.jpg'); 
-//	$mail->isHTML(true); // Paramétrer le format des emails en HTML ou non
-
-	$mail->Subject = 'Objet';
-	$mail->Body = 'Texte du mail';
-	$mail->AltBody = 'Texte au format text...';
-	
-	
-	if(!$mail->send()) {
-		echo 'Erreur, message non envoyé.';
-		echo 'Mailer Error: ' . $mail->ErrorInfo;
-	} else {
-		echo 'Le message a bien été envoyé !';
-	}
-*/
-?>
+$mail = new PHPMailer();
+$mail->isSMTP();
+$mail->Host = $smtp_host;
+$mail->SMTPAuth = true;
+$mail->Username = $smtp_username;
+$mail->Password = $smtp_password;
+$mail->SMTPSecure = isset($smtp_encryption) ? $smtp_encryption : 'ssl';
+$mail->Port = isset($smtp_port) ? $smtp_port : 465;
+$mail->setFrom($smtp_from, 'Quiz En Tout Genre');
+$mail->addReplyTo($smtp_from);
+$mail->addBCC(isset($smtp_bcc) ? $smtp_bcc : $smtp_from);
+$mail->isHTML(true);
+$mail->AltBody = '';
