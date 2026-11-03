@@ -4,5 +4,10 @@
     "type": "project",
     "require": {
         "phpmailer/phpmailer": "^6.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "QETG\\": "src/"
+        }
     }
 }

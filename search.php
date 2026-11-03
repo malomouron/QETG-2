@@ -23,7 +23,8 @@
 									</div>
 								</form>';
 		foreach($selete_recherche_user as $row) {
-			echo '				<a href="Quiz-presentation.php?id_quiz='.$row["id_quiz"].'">
+							$quizUrl = ((int) $row['id_quiz_user'] === 0 ? 'quiz-officiel?id=' : 'makeQuiz.php?id_quiz=') . (int) $row['id_quiz'];
+							echo '				<a href="'.$quizUrl.'">
 									<div id="search-div">
 										<img id="search-img-pre" src="'.$row['src'].'" alt="'.$row['alt'].'">
 										<div id="search-div-img">

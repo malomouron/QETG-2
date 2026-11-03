@@ -5,9 +5,9 @@
     if (isset($_SESSION['login'])){
 
         if ($os == "windos") {
-            $repertoireDestination = dirname(__FILE__)."\\quiz_perso\\";
+            $repertoireDestination = dirname(__FILE__)."\\uploads\\quizzes\\";
         } else {
-            $repertoireDestination = dirname(__FILE__)."/quiz_perso/";
+            $repertoireDestination = dirname(__FILE__)."/uploads/quizzes/";
         }
         $nomDestination = "fichier_de_quiz_du_".date("Y-m-d-H-i-s")."_par_".$_SESSION['id'];
 
@@ -22,7 +22,7 @@
                     $update_quiz_user = $db->query("UPDATE quiz SET nom_quiz = '" . securisation($_POST['name_quiz']) . "', bienvenue = '".securisation($_POST['descrip_quiz'])."',portee = ".$_POST['porte']." WHERE id_quiz = ".$_GET['q']);
                 }else{
                     if (move_uploaded_file($_FILES["image_uploads"]["tmp_name"], $repertoireDestination . $nomDestination)) {
-                        $update_quiz_user = $db->query("UPDATE quiz SET nom_quiz = '" . securisation($_POST['name_quiz']) . "', bienvenue = '".securisation($_POST['descrip_quiz'])."', src = '/quiz_perso/" . $nomDestination . "',portee = ".$_POST['porte']." WHERE id_quiz = ".$_GET['q']);
+                        $update_quiz_user = $db->query("UPDATE quiz SET nom_quiz = '" . securisation($_POST['name_quiz']) . "', bienvenue = '".securisation($_POST['descrip_quiz'])."', src = '/uploads/quizzes/" . $nomDestination . "',portee = ".$_POST['porte']." WHERE id_quiz = ".$_GET['q']);
                     } else {
                         echo "Le fichier n'a pas été uploadé (trop gros ?) ou Le déplacement du fichier temporaire a échoué vérifiez l'existence du répertoire ".$repertoireDestination;
                     }
@@ -48,14 +48,14 @@
                 }
 
             }else{
-                header('Location: identifier.php');
+                header('Location: connexion', true, 303);
             }
             header('Location: quiz_utilisateur.php?defaultOnglet3=');
         }else{
 
             //insert quiz + img
             if (move_uploaded_file($_FILES["image_uploads"]["tmp_name"], $repertoireDestination . $nomDestination)) {
-                $insert_quiz_user = $db->query("INSERT INTO quiz (id_quiz, id_image_quiz, nom_quiz, bienvenue, xp, id_user, id_quiz_user, src, nbrQuestion,portee) VALUES (NULL, NULL, '" . securisation($_POST['name_quiz']) . "', '".securisation($_POST['descrip_quiz'])."', '5', '" . $_SESSION['id'] . "', '1', '/quiz_perso/" . $nomDestination . "', " . $_POST['nb_question'] . ", ".$_POST['porte'].")");
+                $insert_quiz_user = $db->query("INSERT INTO quiz (id_quiz, id_image_quiz, nom_quiz, bienvenue, xp, id_user, id_quiz_user, src, nbrQuestion,portee) VALUES (NULL, NULL, '" . securisation($_POST['name_quiz']) . "', '".securisation($_POST['descrip_quiz'])."', '5', '" . $_SESSION['id'] . "', '1', '/uploads/quizzes/" . $nomDestination . "', " . $_POST['nb_question'] . ", ".$_POST['porte'].")");
             } else {
                 echo "Le fichier n'a pas été uploadé (trop gros ?) ou Le déplacement du fichier temporaire a échoué vérifiez l'existence du répertoire ".$repertoireDestination;
             }

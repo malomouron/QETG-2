@@ -48,13 +48,27 @@
 
     function afficher_head($title, $fichiers_css, $charset)
         {
-            global $domaine;
+            $applicationRoot = realpath(__DIR__);
+            $documentRoot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+            $applicationPath = '';
+            if ($applicationRoot !== false && $documentRoot !== false) {
+                $normalizedRoot = rtrim(str_replace('\\', '/', $documentRoot), '/');
+                $normalizedApp = str_replace('\\', '/', $applicationRoot);
+                if (strtolower($normalizedApp) === strtolower($normalizedRoot)) {
+                    $applicationPath = '';
+                } elseif (stripos($normalizedApp, $normalizedRoot . '/') === 0) {
+                    $applicationPath = substr($normalizedApp, strlen($normalizedRoot));
+                }
+            }
+            $applicationPath = rtrim($applicationPath, '/');
+            $faviconPath = $applicationPath . '/favicon.png';
+            $cookieScriptPath = $applicationPath . '/node_modules/tarteaucitronjs/tarteaucitron.js';
 
             echo '<title>'.$title.'</title>
             ';
             echo '<meta charset="'.$charset.'">
             ';
-            echo '<link rel="icon" type="image/ico" href="favicon.png">
+            echo '<link rel="icon" type="image/ico" href="'.$faviconPath.'">
             ';
     // et maintenant, il va falloir parcourir le tableau passé dans la fonction pour pouvoir générer autant de ligne que d'occurence dans le tableau
     // TODO --->  astuce ---> utiliser la fonction foreach
@@ -64,7 +78,7 @@
                 ';
             }
             echo '
-            <script type="text/javascript" src="'.rtrim($domaine, '/').'/node_modules/tarteaucitronjs/tarteaucitron.js"></script>
+            <script type="text/javascript" src="'.$cookieScriptPath.'"></script>
     
             <script type="text/javascript">
             tarteaucitron.init({
@@ -83,7 +97,7 @@
               "closePopup": false, /* Show a close X on the banner */
     
               "showIcon": true, /* Show cookie icon to manage cookies */
-              "iconSrc": "favicon.png", /* Optionnal: URL or base64 encoded image */
+              "iconSrc": "'.$faviconPath.'", /* Optionnal: URL or base64 encoded image */
               "iconPosition": "BottomLeft", /* BottomRight, BottomLeft, TopRight and TopLeft */
     
               "adblocker": true, /* Show a Warning if an adblocker is detected */

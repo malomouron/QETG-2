@@ -400,13 +400,13 @@
 							echo '	<div class="quiz_utilisateur-div-ajt-profil">
 										<img class="quiz_utilisateur-img-profil"  src="'.$selectMembreRechercher['image_profil'].'">
 										<span class="quiz_utilisateur-span-ajt-profil">'.$selectMembreRechercher['login'].'</span>
-									<a class="quiz_utilisateur-a-profil" href="identifier.php">S\'abonner</a>
+									<a class="quiz_utilisateur-a-profil" href="connexion">S\'abonner</a>
 									</div>';
 						}else{
 							echo '	<div class="quiz_utilisateur-div-ajt-profil">
 										<img class="quiz_utilisateur-img-profil" src="commun/bouton-profil.png">
 										<span class="quiz_utilisateur-span-ajt-profil">'.$selectMembreRechercher['login'].'</span>
-									<a class="quiz_utilisateur-a-profil" href="identifier.php">S\'abonner</a>
+									<a class="quiz_utilisateur-a-profil" href="connexion">S\'abonner</a>
 									</div>';
 						}
 					}
@@ -464,7 +464,7 @@
 									    <img class="quiz_utilisateur-img-profil"  src="'.$select_membre['image_profil'].'">
 									    <span>'.$select_membre['login'].'</span>
 									</a>
-								    <a class="quiz_utilisateur-a-profil" href="identifier.php">S\'abonner</a>
+								    <a class="quiz_utilisateur-a-profil" href="connexion">S\'abonner</a>
 								</div>';
 					}else{
 						echo '	<div class="quiz_utilisateur-div-ajt-profil">
@@ -472,7 +472,7 @@
 									    <img class="quiz_utilisateur-img-profil" src="commun/bouton-profil.png">
 									    <span>'.$select_membre['login'].'</span>
 									</a>
-								    <a class="quiz_utilisateur-a-profil" href="identifier.php">S\'abonner</a>
+								    <a class="quiz_utilisateur-a-profil" href="connexion">S\'abonner</a>
 								</div>';
 					}
 				}

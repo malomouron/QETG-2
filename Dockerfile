@@ -23,7 +23,7 @@ COPY --from=javascript-dependencies /app/node_modules ./node_modules
 COPY docker/apache-qetg.conf /etc/apache2/conf-available/qetg.conf
 
 RUN a2enconf qetg \
-    && mkdir -p quiz_perso image-profil/image-personaliser \
-    && chown -R www-data:www-data quiz_perso image-profil/image-personaliser
+    && mkdir -p uploads/quizzes uploads/avatars \
+    && chown -R www-data:www-data uploads
 
 EXPOSE 80

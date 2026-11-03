@@ -1,7 +1,11 @@
 <?php
-	session_start();
-	session_unset();
-	session_destroy();
-	header('Location: index.php');
-	exit();
-?>
+
+declare(strict_types=1);
+
+$scriptPath = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/deconnexion.php'));
+$basePath = rtrim(dirname($scriptPath), '/');
+if ($basePath === '.' || $basePath === '/') {
+    $basePath = '';
+}
+header('Location: ' . $basePath . '/deconnexion', true, 302);
+exit;

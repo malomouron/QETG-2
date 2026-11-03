@@ -19,12 +19,12 @@
 		include ('footer.php');
 		$_SESSION['erreur'] = 'Merci de nous avoir signalé que ce n\'était pas votre adresse email, vous pouvez continuer de naviguer sur notre site si vous le désirez';
 		$_SESSION['debug'] = 1;
-		header('Location: inscription.php');
+		header('Location: inscription', true, 303);
 	}else{
 		$_SESSION['erreur'] = 'Mauvais mail ou votre cle n\'exisete pas dans notre base de donné';
 		$_SESSION['debug'] = 1;
 		$delet_mauvais_mail = $db->query("DELETE FROM quiz_cle WHERE cle = '".$_REQUEST['k']."'");
 		include ('footer.php');
-		header('Location: inscription.php');
+		header('Location: inscription', true, 303);
 	}
 ?>

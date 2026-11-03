@@ -13,9 +13,9 @@
 			// Copie dans le repertoire du script avec un nom
 			// incluant l'heure a la seconde pres 
 			if ($os == "windos") {
-				$repertoireDestination = dirname(__FILE__)."\\image-profil\\image-personaliser\\";
+				$repertoireDestination = dirname(__FILE__)."\\uploads\\avatars\\";
 			} else {
-				$repertoireDestination = dirname(__FILE__)."/image-profil/image-personaliser/";
+				$repertoireDestination = dirname(__FILE__)."/uploads/avatars/";
 			}
 			$nomDestination = "fichier_du_".date("Y-m-d-H-i-s")."_par_".$_SESSION['id'];
 		
@@ -23,7 +23,7 @@
 											$repertoireDestination.$nomDestination)) {
 				echo "Le fichier temporaire ".$_FILES["avatar"]["tmp_name"].
 						" a été déplacé vers ".$repertoireDestination.$nomDestination;
-				$update_img_prof_file = $db->query('UPDATE quiz_membre SET image_profil = "image-profil/image-personaliser/'.$nomDestination.'" WHERE id = '.$_SESSION['id']);
+				$update_img_prof_file = $db->query('UPDATE quiz_membre SET image_profil = "uploads/avatars/'.$nomDestination.'" WHERE id = '.$_SESSION['id']);
 			} else {
 				echo "Le fichier n'a pas été uploadé (trop gros ?) ou ".
 						"Le déplacement du fichier temporaire a échoué".
@@ -31,7 +31,7 @@
 			}
 		}
 	} elseif (isset($_POST['select-img-profil-dev']) AND !isset($_POST['avatar_perso'])) {
-		$update_img_prof_liste  = $db->query('UPDATE quiz_membre SET image_profil = "image-profil/'.$_POST['select-img-profil-dev'].'" WHERE id = '.$_SESSION['id']);
+		$update_img_prof_liste  = $db->query('UPDATE quiz_membre SET image_profil = "assets/images/avatars/presets/'.$_POST['select-img-profil-dev'].'" WHERE id = '.$_SESSION['id']);
 	}
 	include ('footer.php');
 	header('Location: profil.php');

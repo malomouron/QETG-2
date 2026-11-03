@@ -9,7 +9,7 @@
         }
     }else{
         include ('footer.php');
-        header('Location : identifier.php');
+        header('Location: connexion', true, 303);
     }
     include ('footer.php');
     header('Location: quiz_utilisateur.php?defaultOnglet3');

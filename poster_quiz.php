@@ -655,7 +655,7 @@
             include ("bandeau.php");
         }
 	}else{
-		header('Location: identifier.php');
+		header('Location: connexion', true, 303);
 	}
 	include ('footer.php');
 ?>

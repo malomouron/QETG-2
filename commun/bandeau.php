@@ -13,19 +13,19 @@
 			<a href="poster_quiz.php" class="bandeau-span">Poster des quiz</a>
 		</span>
 		<span class="lien-bandeau">
-			<a href="lien-bandeau/" class="bandeau-span">À propos de</a>
+			<a href="a-propos" class="bandeau-span">À propos de</a>
 		</span>
 		<span class="lien-bandeau">
-			<a href="lien-bandeau/#2" class="bandeau-span">Contacts</a>
+			<a href="a-propos#2" class="bandeau-span">Contacts</a>
 		</span>
 		<span class="lien-bandeau">
-			<a href="lien-bandeau/#3" class="bandeau-span">Avertissements</a>
+			<a href="a-propos#3" class="bandeau-span">Avertissements</a>
 		</span>
 		<span class="lien-bandeau">
-			<a href="lien-bandeau/#4" class="bandeau-span">Cookies</a>
+			<a href="a-propos#4" class="bandeau-span">Cookies</a>
 		</span>
 		<span class="lien-bandeau">
-			<a href="lien-bandeau/#5" class="bandeau-span">Pol. de Conf.</a>
+			<a href="a-propos#5" class="bandeau-span">Pol. de Conf.</a>
 		</span>
 	</div>
 </div>

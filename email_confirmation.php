@@ -11,7 +11,7 @@
 				if ($_POST['pass'] != $_POST['pass_confirm']) {
 					$_SESSION['erreur'] = 'Les 2 mots de passe sont différents.';
 					$_SESSION['debug'] = 1;
-					header('Location: inscription.php');
+					header('Location: inscription', true, 303);
 				} else {
 					$select_connecton_avant_insr = $db->query('SELECT * FROM quiz_membre WHERE login="'.$_POST['login'].'"')->fetchArray();
 					$select_connecton_avant_insr_cle = $db->query('SELECT * FROM quiz_cle WHERE cle_login="'.$_POST['login'].'" and cle != "'.$decrypted_chaine.'"')->fetchArray();
@@ -75,23 +75,23 @@
 							}else{
 								$_SESSION['erreur'] = 'Un membre possède déjà cette adresse email.';
 								$_SESSION['debug'] = 1;
-								header('Location: inscription.php');
+								header('Location: inscription', true, 303);
 							}
 						}else {
 							$_SESSION['erreur'] = 'Un membre possède déjà ce login.';
 							$_SESSION['debug'] = 1;
-							header('Location: inscription.php');
+							header('Location: inscription', true, 303);
 						}
 					} 
 				}else {
 					$_SESSION['erreur'] = 'Au moins un des champs est vide.';
 					$_SESSION['debug'] = 1;
-					header('Location: inscription.php');
+					header('Location: inscription', true, 303);
 				}
 			}
 		}else{
 			$_SESSION['erreur'] = 'Remplir le reCapcha';
 			$_SESSION['debug'] = 1;
-			header('Location: inscription.php');
+			header('Location: inscription', true, 303);
 		}
 ?>

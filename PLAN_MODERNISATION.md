@@ -116,6 +116,8 @@ Ordre conseillé, un parcours et un objectif à la fois :
 
 Chaque lot doit partir d'un comportement caractérisé, inclure ses tests et préserver les autres parcours. Ne pas créer de seconde implémentation en parallèle.
 
+Le parcours des quiz officiels a maintenant une présentation, une question et un résultat routés : reprise de progression pour les membres, progression de session pour les visiteurs, redémarrage après erreur, enregistrement de l’historique/favori existant et vérification des succès à la fin. Les scripts historiques restent accessibles en compatibilité jusqu’à leur migration complète.
+
 **Résultat attendu :** le code historique devient progressivement plus lisible et chaque changement est protégé par des tests.
 
 ### Étape 4 — Livrer et vérifier les changements

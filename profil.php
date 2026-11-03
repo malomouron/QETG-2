@@ -161,7 +161,7 @@
 		}
 		echo 					'<p><b id="b-niveau-descr">'.$_SESSION['login'].'</b><br><span id="span-niveau-descr">Niveau : <span id="span-niveau-descr-int">'.$level.'</span></span><br><span id="span-xp-descr">Expérience : '.$xpbis.'/15</span></p>
 							</div>
-							<a href="identifier.php" id="changer-util">Changer d\'utilisateur</a>
+							<a href="connexion" id="changer-util">Changer d\'utilisateur</a>
 							<div id="div-table-bis">
 								<table id="table-fav" class="table-all-td">
 									<thead class="thead-all">

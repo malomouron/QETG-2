@@ -1,9 +1,11 @@
 api-client-php-master
-image-profil/image-personaliser
+uploads/avatars/*
+!uploads/avatars/.gitkeep
 Perso
 config.inc.php
 PHPMailer
-quiz_perso
+uploads/quizzes/*
+!uploads/quizzes/.gitkeep
 /vendor/
 /node_modules/
 .env

@@ -9,6 +9,6 @@
         }
         header('Location: profil.php?u='.$_GET['id']);
     }else {
-        header('Location: identifier.php');
+        header('Location: connexion', true, 303);
     }
 ?>

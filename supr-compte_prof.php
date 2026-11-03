@@ -17,7 +17,7 @@
 		include ("bandeau.php");
 		echo'			<div id="supr-compte_prof-div1">
 							<h1 id="supr-compte_prof-h11">Nous avons bien réussi à suprimer votre compte</h1>
-							<a id="supr-compte_prof-a1" href="deconnexion.php">cliquer ici pour pouvoir continuer à naviguer</a>
+							<a id="supr-compte_prof-a1" href="deconnexion">cliquer ici pour pouvoir continuer à naviguer</a>
 						</div>
 					</body>
 				</html>';

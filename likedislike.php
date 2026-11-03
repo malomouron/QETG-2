@@ -1,18 +1,33 @@
 <?php
-	session_start();
-	include ('functions.php');
-	$db = new db($dbhost, $dbuser, $dbpass, $dbname);
-	$selectIpLikeupdate = $db->query("SELECT * FROM quiz_like_quiz WHERE id_quiz = ".$_REQUEST['q']." AND '".$_SERVER['REMOTE_ADDR']."' = ip AND likeOrDislike = ".$_REQUEST['l'])->fetchArray();
-	$selectIpLike = $db->query("SELECT count(*) nbr_like_ip FROM quiz_like_quiz WHERE id_quiz = ".$_REQUEST['q']." AND '".$_SERVER['REMOTE_ADDR']."' = ip")->fetchArray();
-	if (isset($_SESSION['auth']) and $_SESSION['auth'] == 1 and $selectIpLike['nbr_like_ip'] == 0){
-		$insertLikeDislikIp = $db->query("INSERT INTO quiz_like_quiz (id_like, id_quiz, ip, likeOrDislike) VALUES (NULL, ".$_REQUEST['q'].", '".$_SERVER['REMOTE_ADDR']."', ".$_REQUEST['l'].")");
-	}elseif(isset($_SESSION['auth']) and $_SESSION['auth'] == 1 and count($selectIpLikeupdate) > 0 ){
-		$delet_likeOrdislike = $db->query("DELETE FROM quiz_like_quiz WHERE id_quiz = ".$_REQUEST['q']." AND ip = '".$_SERVER['REMOTE_ADDR']."'");
-	}elseif(isset($_SESSION['auth']) and $_SESSION['auth'] == 1 and count($selectIpLikeupdate) == 0 and $selectIpLike['nbr_like_ip'] > 0){
-		$calcule = ($_REQUEST['l'] - 1)**2;
-		$udate_likeOrdislike = $db->query("UPDATE quiz_like_quiz SET likeOrDislike = '".$_REQUEST['l']."' WHERE id_quiz = ".$_REQUEST['q']." AND ip = '".$_SERVER['REMOTE_ADDR']."'");
-	}
-	$_SESSION['auth'] = 0;
-	include ('footer.php');
-	header('Location: index.php');
-?>
+
+declare(strict_types=1);
+
+session_start();
+require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/vendor/autoload.php';
+
+use QETG\Application\UseCase\ToggleQuizReaction;
+use QETG\Infrastructure\Persistence\MySQL\MySqlQuizReactionRepository;
+use QETG\Infrastructure\Persistence\MySQL\MySqlQuizRepository;
+
+$quizId = filter_var($_GET['q'] ?? null, FILTER_VALIDATE_INT);
+$value = filter_var($_GET['l'] ?? null, FILTER_VALIDATE_INT);
+if (!isset($_SESSION['auth']) || (int) $_SESSION['auth'] !== 1 || $quizId === false || $quizId === null || !in_array($value, array(0, 1), true)) {
+    header('Location: index.php', true, 303);
+    exit;
+}
+
+try {
+    $database = new db($dbhost, $dbuser, $dbpass, $dbname);
+    $useCase = new ToggleQuizReaction(new MySqlQuizRepository($database), new MySqlQuizReactionRepository($database));
+    $quiz = (new MySqlQuizRepository($database))->findById((int) $quizId);
+    if ($quiz !== null && !$quiz->isMemberCreated) {
+        $useCase->execute((int) $quizId, (string) ($_SERVER['REMOTE_ADDR'] ?? ''), (int) $value);
+    }
+} catch (Throwable $exception) {
+    error_log('QETG legacy official reaction failed: ' . $exception->getMessage());
+}
+
+$_SESSION['auth'] = 0;
+header('Location: index.php#catalogue', true, 303);
+exit;
