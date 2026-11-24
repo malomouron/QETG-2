@@ -1,39 +1,23 @@
 <?php
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+$escape = array(\QETG\Presentation\View\Shared\ViewHelpers::class, 'escape');
 $css = array(
     $basePath . '/css.css',
-    $basePath . '/commun/bandeau.css',
-    $basePath . '/resources/assets/css/home.css',
-    $basePath . '/resources/assets/css/information.css',
+    $basePath . '/assets/css/legacy-bandeau.css',
+    $basePath . '/assets/css/home.css',
+    $basePath . '/assets/css/information.css',
+);
+\QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentStart(
+    $page === 'about' ? 'À propos - Quiz en tout genre' : 'Aide - Quiz en tout genre',
+    $css,
+    'home-page information-page',
+    $page === 'about'
+        ? 'Découvrez Quiz en tout genre, nos contacts et nos informations de confidentialité.'
+        : 'Trouvez des réponses pour utiliser Quiz en tout genre.'
 );
 ?>
-<!doctype html>
-<html lang="fr">
-<head>
-<?php afficher_head($page === 'about' ? 'À propos - Quiz en tout genre' : 'Aide - Quiz en tout genre', $css, 'UTF-8'); ?>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="<?= $page === 'about' ? 'Découvrez Quiz en tout genre, nos contacts et nos informations de confidentialité.' : 'Trouvez des réponses pour utiliser Quiz en tout genre.' ?>">
-</head>
-<body class="home-page information-page">
 <div class="home-shell">
-    <header class="bandeau home-header">
-        <a class="home-brand" href="<?= $escape($basePath) ?>/accueil"><img src="<?= $escape($basePath) ?>/assets/images/community/icon.png" alt="" class="home-brand-icon"><span>Quiz en tout genre</span></a>
-        <nav class="home-nav" aria-label="Navigation principale">
-            <a href="<?= $escape($basePath) ?>/accueil">Accueil</a>
-            <a href="<?= $escape($basePath) ?>/quiz_utilisateur.php">Quiz membres</a>
-            <a href="<?= $escape($basePath) ?>/poster_quiz.php">Créer un quiz</a>
-            <a href="<?= $escape($basePath) ?>/aide">Aide</a>
-        </nav>
-        <div class="home-account">
-            <?php if (isset($_SESSION['login'])): ?>
-                <a class="home-account-link" href="<?= $escape($basePath) ?>/compte/profil"><?= $escape((string) $_SESSION['login']) ?></a>
-            <?php else: ?>
-                <a class="home-account-link" href="<?= $escape($basePath) ?>/connexion">Connexion</a>
-                <a class="home-button home-button--small" href="<?= $escape($basePath) ?>/inscription">Créer un compte</a>
-            <?php endif; ?>
-        </div>
-    </header>
+    <?php $currentPage = $page === 'about' ? 'about' : 'help'; require __DIR__ . '/Shared/site-header.php'; ?>
 
     <main class="information-main">
         <?php if ($page === 'about'): ?>
@@ -75,7 +59,7 @@ $css = array(
                 <h2>Cookies et services tiers</h2>
                 <p>Le site utilise des cookies nécessaires à son fonctionnement et peut charger des services tiers, notamment pour la mesure d’audience ou la protection anti-robot. Ces services peuvent traiter des informations techniques comme l’adresse IP ou des identifiants de navigateur selon leurs propres règles.</p>
                 <p>Vous pouvez consulter ou modifier vos choix via le panneau de gestion des cookies affiché sur le site. Les services tiers peuvent ne pas fonctionner si vous les refusez.</p>
-                <button class="information-link-button" type="button" onclick="if (window.tarteaucitron) { window.tarteaucitron.userInterface.openPanel(); }">Gérer mes préférences cookies</button>
+                <button class="information-link-button" type="button" data-cookie-preferences>Gérer mes préférences cookies</button>
             </section>
 
             <section class="information-card" id="5">
@@ -118,7 +102,7 @@ $css = array(
                     <details class="help-faq" data-search="créer publier quiz question brouillon privé public modifier">
                         <summary>Comment créer et publier un quiz ?</summary>
                         <p>Connectez-vous, choisissez « Créer un quiz » et ajoutez ses questions et réponses. Vous pouvez enregistrer un brouillon puis reprendre sa préparation depuis « Mes quiz » dans votre profil.</p>
-                        <a href="<?= $escape($basePath) ?>/poster_quiz.php">Créer un quiz →</a>
+                        <a href="<?= $escape($basePath) ?>/quiz-membres/editeur">Créer un quiz →</a>
                     </details>
                     <details class="help-faq" data-search="favori favoris historique profil xp niveau succès">
                         <summary>Où retrouver mes favoris et ma progression ?</summary>
@@ -144,28 +128,10 @@ $css = array(
                 <p class="help-no-results" id="help-no-results" hidden>Aucun résultat. Essayez d’autres mots ou <a href="<?= $escape($basePath) ?>/a-propos#2">contactez-nous</a>.</p>
             </section>
             <section class="help-contact-card"><div><p class="home-eyebrow">Encore besoin d’aide ?</p><h2>Nous sommes à votre écoute.</h2><p>Écrivez-nous et décrivez le problème rencontré.</p></div><a class="home-button" href="mailto:admin@malomouron.fr">Contacter l’équipe →</a></section>
-            <script>
-                (function () {
-                    const input = document.getElementById('help-search-input');
-                    const items = Array.from(document.querySelectorAll('.help-faq'));
-                    const empty = document.getElementById('help-no-results');
-                    input.addEventListener('input', function () {
-                        const query = input.value.trim().toLocaleLowerCase('fr');
-                        let visibleCount = 0;
-                        items.forEach(function (item) {
-                            const searchable = (item.dataset.search + ' ' + item.textContent).toLocaleLowerCase('fr');
-                            const visible = query === '' || searchable.includes(query);
-                            item.hidden = !visible;
-                            if (visible) visibleCount++;
-                        });
-                        empty.hidden = visibleCount > 0;
-                    });
-                }());
-            </script>
         <?php endif; ?>
     </main>
 
-    <footer class="home-footer"><p>Quiz en tout genre · Une communauté de curieux.</p><nav aria-label="Liens d’information"><a href="<?= $escape($basePath) ?>/a-propos">À propos</a><a href="<?= $escape($basePath) ?>/aide">Aide</a><a href="<?= $escape($basePath) ?>/a-propos#5">Confidentialité</a></nav></footer>
+    <?php require __DIR__ . '/Shared/site-footer.php'; ?>
 </div>
-</body>
-</html>
+<?php if ($page === 'help'): ?><?php \QETG\Presentation\View\Shared\ApplicationLayout::renderScript($basePath . '/assets/js/information.js'); ?><?php endif; ?>
+<?php \QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentEnd(); ?>

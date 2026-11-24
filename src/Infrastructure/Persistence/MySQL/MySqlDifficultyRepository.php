@@ -17,7 +17,10 @@ final class MySqlDifficultyRepository extends MySqlRepository implements Difficu
 
     public function findAll(): array
     {
-        return array_map(fn (array $row): Difficulty => $this->hydrate($row), $this->many('SELECT * FROM quiz_difficulte ORDER BY id_difficulte'));
+        $rows = $this->many(
+            "SELECT * FROM quiz_difficulte ORDER BY CASE libelle WHEN 'Très simple' THEN 1 WHEN 'Simple' THEN 2 WHEN 'Intermédiaire' THEN 3 WHEN 'Difficile' THEN 4 WHEN 'Très difficile' THEN 5 ELSE 99 END, id_difficulte"
+        );
+        return array_map(fn (array $row): Difficulty => $this->hydrate($row), $rows);
     }
 
     public function save(Difficulty $difficulty): Difficulty

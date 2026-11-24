@@ -1,0 +1,144 @@
+.account-main {
+    display: grid;
+    min-height: calc(100vh - 145px);
+    grid-template-columns: minmax(0, 500px) minmax(240px, 360px);
+    align-items: center;
+    justify-content: center;
+    gap: clamp(32px, 7vw, 100px);
+    padding: 48px 24px;
+    background: radial-gradient(circle at 16% 10%, rgba(60,178,255,.13), transparent 30%), var(--home-canvas);
+}
+.account-panel {
+    width: 100%;
+    border: 1px solid var(--home-line);
+    border-radius: 22px;
+    padding: clamp(24px, 4vw, 42px);
+    background: #fff;
+    box-shadow: var(--home-shadow);
+}
+.account-back-link { display: inline-block; margin-bottom: 30px; color: var(--home-muted); font-size: 13px; font-weight: 650; }
+.account-panel h1 { margin: 0; color: var(--home-ink); font-size: clamp(32px, 4vw, 42px); letter-spacing: -.04em; }
+.account-intro { margin: 12px 0 24px; color: var(--home-muted); font-size: 14px; line-height: 1.65; }
+.account-form { display: grid; gap: 10px; }
+.account-form > label, .account-form-grid label { margin-top: 5px; color: #394550; font-size: 13px; font-weight: 750; }
+.account-form input:not([type="checkbox"]) { width: 100%; min-height: 47px; border: 1px solid var(--home-line); border-radius: 10px; padding: 0 13px; background: #fbfdff; color: var(--home-ink); font: inherit; outline: 0; }
+.account-form input:focus { border-color: var(--home-blue-dark); box-shadow: 0 0 0 3px rgba(60,178,255,.15); }
+.account-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.account-form-grid > div { display: grid; gap: 10px; }
+.account-form-meta { display: flex; justify-content: flex-end; margin: 2px 0 10px; }
+.account-form-meta a, .account-switch a { color: #1685cf; font-size: 13px; font-weight: 750; }
+.account-switch { margin: 20px 0 0; color: var(--home-muted); text-align: center; font-size: 13px; }
+.account-checkbox { display: flex; align-items: center; gap: 9px; margin: 8px 0; color: #52606b; font-size: 13px; }
+.account-checkbox input { width: 17px; height: 17px; accent-color: #1685cf; }
+.account-field-hint { float: right; color: #89949e; font-size: 11px; font-weight: 500; }
+.account-alert { margin: 0 0 18px; border: 1px solid #d5e9f6; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; }
+.account-alert--error { border-color: #f0caca; background: #fff5f5; color: #9c3434; }
+.account-alert--success { border-color: #c8e8d5; background: #f3fbf5; color: #287044; }
+.account-alert--info { background: #f3f9fd; color: #38586c; }
+.profile-summary { display: flex; align-items: center; gap: 14px; margin: 0 0 19px; border: 1px solid var(--home-line); border-radius: 14px; padding: 14px; background: #f8fbfe; }
+.profile-avatar { display: grid; width: 58px; height: 58px; flex: 0 0 58px; place-items: center; border: 2px solid #d5edfb; border-radius: 18px; object-fit: cover; background: #e8f6ff; color: #1685cf; font-size: 24px; font-weight: 850; }
+.profile-summary strong, .profile-summary span { display: block; }
+.profile-summary strong { color: var(--home-ink); font-size: 16px; }
+.profile-summary span:not(.profile-avatar) { margin-top: 4px; color: var(--home-muted); font-size: 12px; }
+.profile-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0 0 22px; }
+.profile-stat-grid > div { display: grid; min-height: 76px; place-content: center; gap: 3px; border: 1px solid var(--home-line); border-radius: 12px; background: #fff; text-align: center; }
+.profile-stat-grid strong { color: #1685cf; font-size: 21px; }
+.profile-stat-grid span { color: var(--home-muted); font-size: 10px; }
+.account-page--profile .account-main { grid-template-columns: minmax(0, 1120px); }
+.account-page--profile .account-panel { width: 100%; padding: clamp(24px, 4vw, 44px); }
+.account-page--profile .account-panel > h1 { margin-bottom: 4px; }
+.account-page--profile .profile-stat-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 700px; }
+.profile-section { margin-top: 32px; border-top: 1px solid var(--home-line); padding-top: 24px; }
+.profile-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
+.profile-section-heading h2 { margin: 0; color: var(--home-ink); font-size: 22px; letter-spacing: -.025em; }
+.profile-section-count { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: #e8f6ff; color: #1685cf; font-weight: 800; }
+.profile-inline-link { color: #1685cf; font-size: 13px; font-weight: 750; }
+.profile-empty { border: 1px dashed #cbd9e4; border-radius: 12px; padding: 18px; background: #f8fbfe; color: var(--home-muted); font-size: 14px; }
+.profile-empty a { display: inline-flex; min-height: 32px; align-items: center; margin: 8px 0 0; border: 1px solid #b9def4; border-radius: 8px; padding: 0 10px; background: #eaf6fd; color: #1685cf; font-size: 13px; font-weight: 750; line-height: 1.2; }
+.profile-quiz-list { overflow: hidden; border: 1px solid var(--home-line); border-radius: 14px; background: #fff; }
+.profile-quiz-row { display: flex; min-height: 78px; align-items: center; gap: 14px; padding: 12px 15px; }
+.profile-quiz-row + .profile-quiz-row { border-top: 1px solid #edf1f5; }
+.profile-quiz-row > img, .profile-quiz-placeholder { display: grid; width: 58px; height: 48px; flex: 0 0 58px; place-items: center; border-radius: 9px; object-fit: cover; background: #e8f6ff; color: #1685cf; font-weight: 850; }
+.profile-quiz-details { display: grid; min-width: 0; gap: 5px; }
+.profile-quiz-details > a { overflow: hidden; color: var(--home-ink); font-size: 14px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.profile-quiz-details > span { color: var(--home-muted); font-size: 11px; }
+.profile-quiz-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; margin-left: auto; font-size: 11px; }
+.profile-quiz-actions a, .profile-quiz-actions button { border: 0; padding: 0; background: transparent; color: #1685cf; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+.profile-quiz-actions button:hover { color: #0c659f; text-decoration: underline; }
+.profile-quiz-actions > span { color: #9a7415; }
+.avatar-form { display: grid; justify-items: start; gap: 13px; }
+.avatar-choice-fieldset { width: 100%; min-width: 0; margin: 0; border: 1px solid var(--home-line); border-radius: 13px; padding: 12px; }
+.avatar-choice-fieldset legend { padding: 0 5px; color: #44505b; font-size: 13px; font-weight: 750; }
+.avatar-choice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 9px; max-height: 220px; overflow-y: auto; padding: 3px; }
+.avatar-choice { position: relative; display: grid; aspect-ratio: 1; place-items: center; border: 2px solid transparent; border-radius: 12px; background: #f4f8fb; cursor: pointer; }
+.avatar-choice:has(input:checked), .avatar-choice.is-selected { border-color: var(--home-blue-dark); background: #e8f6ff; }
+.avatar-choice input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.avatar-choice img { width: 90%; height: 90%; object-fit: contain; pointer-events: none; }
+.avatar-form .home-button { min-height: 40px; }
+.achievement-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.achievement-card { display: flex; gap: 12px; border: 1px solid var(--home-line); border-radius: 13px; padding: 15px; background: #fff; }
+.achievement-icon { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border-radius: 12px; background: #fff4d8; color: #bf8812; font-size: 21px; }
+.achievement-card h3 { margin: 0 0 5px; color: var(--home-ink); font-size: 14px; }
+.achievement-card p { margin: 0 0 8px; color: var(--home-muted); font-size: 12px; line-height: 1.5; }
+.achievement-card small { color: #9a7415; font-size: 10px; }
+.profile-created-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.created-quiz-card { min-width: 0; border: 1px solid var(--home-line); border-radius: 14px; padding: 16px; background: #fff; }
+.created-quiz-card-top { display: flex; justify-content: space-between; gap: 8px; color: var(--home-muted); font-size: 10px; }
+.created-quiz-status { border-radius: 999px; padding: 4px 8px; background: #fff4d8; color: #8d6816; font-weight: 800; }
+.created-quiz-status.is-published { background: #e7f7ec; color: #287044; }
+.created-quiz-card h3 { margin: 13px 0 6px; color: var(--home-ink); font-size: 16px; }
+.created-quiz-card > p { display: -webkit-box; min-height: 36px; overflow: hidden; margin: 0 0 14px; color: var(--home-muted); font-size: 12px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.created-quiz-reactions { display: flex; gap: 12px; margin: 0 0 12px; color: var(--home-muted); font-size: 11px; }
+.created-quiz-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #edf1f5; padding-top: 11px; }
+.created-quiz-actions a, .created-quiz-actions button { border: 0; padding: 0; background: transparent; color: #1685cf; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+.created-quiz-actions form { margin: 0 0 0 auto; }
+.created-quiz-actions form button { color: #b24646; }
+.profile-account-actions { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 28px; border: 1px solid #d5e9f6; border-radius: 12px; padding: 14px 16px; background: #f3f9fd; }
+.profile-account-actions strong, .profile-account-actions span { display: block; }
+.profile-account-actions strong { color: var(--home-ink); font-size: 13px; }
+.profile-account-actions span { margin-top: 4px; color: var(--home-muted); font-size: 11px; }
+.profile-account-actions a { color: #1685cf; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.profile-delete-account { margin-top: 14px; border: 1px solid #f0caca; border-radius: 12px; padding: 13px 15px; background: #fffafa; }
+.profile-delete-account summary { color: #9c3434; font-size: 13px; font-weight: 800; cursor: pointer; }
+.profile-delete-account > p { color: #805a5a; font-size: 12px; }
+.profile-delete-account .account-form { max-width: 440px; }
+.delete-account-button { min-height: 40px; border: 1px solid #d99a9a; border-radius: 10px; padding: 0 14px; background: #fff0f0; color: #9c3434; font-weight: 800; cursor: pointer; }
+.profile-extra-links { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 17px; color: var(--home-muted); font-size: 12px; }
+.profile-extra-links label { display: flex; align-items: center; gap: 10px; }
+.profile-extra-links select { border: 1px solid var(--home-line); border-radius: 8px; padding: 7px 9px; background: white; color: var(--home-ink); }
+.profile-extra-links > a { color: #1685cf; font-weight: 750; }
+.account-aside {
+    max-width: 340px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 22px;
+    padding: clamp(26px, 4vw, 40px);
+    background: linear-gradient(145deg, #30363c 0%, #3d3d3d 72%, #2d4858 100%);
+    box-shadow: 0 22px 50px rgba(18, 38, 58, .18);
+    color: #fff;
+}
+.account-aside-icon { display: grid; width: 90px; height: 90px; place-items: center; margin-bottom: 28px; border: 1px solid rgba(255,255,255,.28); border-radius: 28px; background: linear-gradient(145deg, #3cb2ff, #1685cf); box-shadow: 0 22px 45px rgba(0,0,0,.2); color: #10202d; font-size: 38px; font-weight: 900; transform: rotate(-7deg); }
+.account-aside .home-eyebrow { color: #73caff; }
+.account-aside h2 { margin: 0; font-size: clamp(27px, 3vw, 36px); letter-spacing: -.035em; line-height: 1.15; }
+.account-aside p:not(.home-eyebrow) { color: #cbd4db; font-size: 15px; line-height: 1.7; }
+.account-aside > a { display: inline-block; margin-top: 8px; color: #83d0ff; font-weight: 750; }
+.account-aside .account-security-button { color: #10202d; }
+.account-aside .account-aside-secondary { display: inline-block; margin-left: 10px; }
+.account-page .home-footer { margin-top: 0; }
+
+@media (max-width: 760px) {
+    .account-main { min-height: auto; grid-template-columns: minmax(0, 500px); padding: 28px 16px 38px; }
+    .account-aside { display: none; }
+    .account-panel { padding: 25px 20px; }
+    .account-page--profile .account-main { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+    .account-form-grid { grid-template-columns: 1fr; }
+    .account-back-link { margin-bottom: 22px; }
+    .profile-stat-grid { gap: 6px; }
+    .profile-stat-grid span { font-size: 9px; }
+    .account-page--profile .profile-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .profile-quiz-row { align-items: flex-start; flex-wrap: wrap; }
+    .profile-quiz-actions { width: 100%; justify-content: flex-start; margin-left: 72px; }
+    .achievement-grid, .profile-created-grid { grid-template-columns: 1fr; }
+    .profile-account-actions { align-items: flex-start; flex-direction: column; }
+}

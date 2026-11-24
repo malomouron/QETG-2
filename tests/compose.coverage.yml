@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: tests/coverage-app.Dockerfile
+      args:
+        PHP_VERSION: '8.2'
+    environment:
+      APP_PRIVATE_KEY: qetg-ci-only-application-key-000000000000000000000000000000
+      XDEBUG_MODE: coverage
+      QETG_COVERAGE_DIR: /tmp/qetg-coverage
+    volumes:
+      - .:/var/www/html/tests:ro

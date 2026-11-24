@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace QETG\Infrastructure\Persistence\MySQL;
 
+use DateTimeImmutable;
 use QETG\Domain\Entity\PendingRegistration;
 use QETG\Domain\Repository\PendingRegistrationRepositoryInterface;
 
@@ -47,7 +48,7 @@ final class MySqlPendingRegistrationRepository extends MySqlRepository implement
         );
         if ($registration->id === null) {
             $this->execute(
-                'INSERT INTO quiz_cle (cle, cle_login, cle_pass_md5, cle_email, cle_nom, cle_prenom, cle_newletter, cle_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO quiz_cle (cle, cle_login, cle_password_hash, cle_email, cle_nom, cle_prenom, cle_newletter, cle_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 ...$values
             );
             return new PendingRegistration(
@@ -63,7 +64,7 @@ final class MySqlPendingRegistrationRepository extends MySqlRepository implement
             );
         }
         $this->execute(
-            'UPDATE quiz_cle SET cle = ?, cle_login = ?, cle_pass_md5 = ?, cle_email = ?, cle_nom = ?, cle_prenom = ?, cle_newletter = ?, cle_date = ? WHERE id_cle = ?',
+            'UPDATE quiz_cle SET cle = ?, cle_login = ?, cle_password_hash = ?, cle_email = ?, cle_nom = ?, cle_prenom = ?, cle_newletter = ?, cle_date = ? WHERE id_cle = ?',
             ...array_merge($values, array($registration->id))
         );
         return $registration;
@@ -74,13 +75,21 @@ final class MySqlPendingRegistrationRepository extends MySqlRepository implement
         $this->execute('DELETE FROM quiz_cle WHERE id_cle = ?', $id);
     }
 
+    public function deleteExpiredBefore(DateTimeImmutable $cutoff): int
+    {
+        return $this->database->execute(
+            "DELETE FROM quiz_cle WHERE STR_TO_DATE(cle_date, '%Y-%m-%d') < ?",
+            $cutoff->format('Y-m-d')
+        );
+    }
+
     private function hydrate(array $row): PendingRegistration
     {
         return new PendingRegistration(
             (int) $row['id_cle'],
             (string) $row['cle'],
             (string) $row['cle_login'],
-            (string) $row['cle_pass_md5'],
+            (string) $row['cle_password_hash'],
             (string) $row['cle_email'],
             (string) $row['cle_nom'],
             (string) $row['cle_prenom'],

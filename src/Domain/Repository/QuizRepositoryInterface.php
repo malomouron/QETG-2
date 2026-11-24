@@ -20,6 +20,12 @@ interface QuizRepositoryInterface
 
     public function countOfficial(): int;
 
+    /** @return list<Quiz> */
+    public function searchVisibleByName(string $searchTerm, int $limit): array;
+
+    /** @return list<Quiz> Completed member quizzes; a private quiz is included only when addressed by its ID. */
+    public function findMemberQuizzes(?string $searchTerm, ?int $quizId, int $limit): array;
+
     public function recordView(int $id): void;
 
     /** @return list<Quiz> */

@@ -1,0 +1,20 @@
+.search-main { width: min(1120px, calc(100% - 40px)); min-height: calc(100vh - 160px); margin: 0 auto; padding: 48px 0 56px; }
+.search-hero { border: 1px solid #dfeaf2; border-radius: 22px; padding: clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #fff 0%, #e8f6ff 100%); box-shadow: 0 18px 50px rgba(18, 38, 58, .07); }
+.search-hero h1 { margin: 0; color: #202630; font-size: clamp(32px, 5vw, 48px); letter-spacing: -.04em; }
+.search-hero > p:not(.home-eyebrow) { margin: 12px 0 24px; color: #687381; line-height: 1.6; }
+.search-form { display: flex; gap: 10px; max-width: 760px; }
+.search-form input { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #d7e1e9; border-radius: 12px; padding: 0 16px; background: #fff; color: #202630; font: inherit; }
+.search-form input:focus { border-color: #1685cf; outline: 3px solid rgba(60, 178, 255, .2); }
+.search-form .home-button { flex: 0 0 auto; }
+.search-results { padding: 32px 0 8px; }
+.search-results-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.search-results-heading h2 { margin: 0; color: #202630; font-size: clamp(20px, 3vw, 28px); overflow-wrap: anywhere; }
+.search-results-heading > span { flex: 0 0 auto; color: #687381; font-size: 13px; }
+.search-empty { display: grid; min-height: 220px; place-content: center; justify-items: center; border: 1px dashed #b6d8ed; border-radius: 17px; padding: 24px; background: #fff; text-align: center; }
+.search-empty h2 { margin: 0 0 8px; color: #202630; font-size: 22px; }
+.search-empty p { margin: 0; color: #687381; line-height: 1.6; }
+.search-card-footer { display: flex; align-items: center; gap: 12px; border-top: 1px solid #edf1f5; padding-top: 12px; color: #687381; font-size: 12px; }
+.search-card-footer > span:last-of-type { color: #1685cf; font-weight: 750; }
+.search-card-footer .quiz-open-link { margin-left: auto; }
+.search-back-link { display: inline-block; margin-top: 24px; color: #1685cf; font-size: 14px; font-weight: 750; }
+@media (max-width: 600px) { .search-main { width: min(100% - 30px, 560px); padding-top: 28px; } .search-form { align-items: stretch; flex-direction: column; } .search-form .home-button { width: 100%; } .search-results-heading { align-items: start; flex-direction: column; gap: 5px; } }

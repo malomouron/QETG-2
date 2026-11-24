@@ -19,7 +19,7 @@ final class Router
         $this->addRoute('POST', $path, $handler);
     }
 
-    public function dispatch(string $method, string $requestUri, string $basePath = ''): void
+    public function dispatch(string $method, string $requestUri, string $basePath = '', ?callable $onMatchedGet = null): void
     {
         $requestPath = parse_url($requestUri, PHP_URL_PATH);
         $requestPath = \is_string($requestPath) ? $requestPath : '/';
@@ -40,6 +40,9 @@ final class Router
             return;
         }
 
+        if ($normalizedMethod === 'GET' && $onMatchedGet !== null) {
+            $onMatchedGet($path);
+        }
         $handler();
     }
 

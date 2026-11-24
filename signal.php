@@ -1,14 +1,25 @@
 <?php
+
+declare(strict_types=1);
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
-    include ('functions.php');
-    $db = new db($dbhost, $dbuser, $dbpass, $dbname);
-    if (isset($_SESSION['id'])){
-        $select_verif_signal = $db->query("SELECT * FROM quiz_signalement WHERE id_user_origine = ".$_SESSION['id']." AND id_user_cible = ".$_GET['id'])->numRows();
-        if ($select_verif_signal == 0 AND $_SESSION['id'] != $_GET['id']){
-            $insert_signal = $db->query("INSERT INTO `quiz_signalement` (`id_user_origine`, `id_user_cible`) VALUES (".$_SESSION['id'].", ".$_GET['id'].")");
-        }
-        header('Location: profil.php?u='.$_GET['id']);
-    }else {
-        header('Location: connexion', true, 303);
-    }
-?>
+}
+require_once __DIR__ . '/bootstrap/legacy.php';
+$basePath = \QETG\Presentation\View\Shared\ApplicationLayout::basePath();
+
+$targetId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+if (!isset($_SESSION['id'])) {
+    header('Location: ' . $basePath . '/connexion', true, 303);
+    exit;
+}
+
+if ($targetId === false || $targetId === null || $targetId < 1) {
+    http_response_code(404);
+    echo 'Profil introuvable.';
+    exit;
+}
+
+// GET is only a compatibility redirect. Actual reporting is now a CSRF-protected POST.
+header('Location: ' . $basePath . '/profil-public?id=' . $targetId . '#signaler', true, 303);
+exit;

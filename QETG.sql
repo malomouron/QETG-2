@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `quiz_cle` (
   `id_cle` int NOT NULL AUTO_INCREMENT,
   `cle` text NOT NULL,
   `cle_login` text NOT NULL,
-  `cle_pass_md5` text NOT NULL,
+  `cle_password_hash` varchar(255) NOT NULL,
   `cle_email` varchar(100) NOT NULL,
   `cle_nom` varchar(20) NOT NULL,
   `cle_prenom` varchar(20) NOT NULL,
@@ -98,6 +98,9 @@ CREATE TABLE IF NOT EXISTS `quiz_difficulte` (
   `libelle` varchar(100) NOT NULL,
   PRIMARY KEY (`id_difficulte`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+INSERT INTO `quiz_difficulte` (`libelle`) VALUES
+  ('Très simple'), ('Simple'), ('Intermédiaire'), ('Difficile'), ('Très difficile');
 
 -- --------------------------------------------------------
 
@@ -139,8 +142,8 @@ CREATE TABLE IF NOT EXISTS `quiz_like_quiz` (
 DROP TABLE IF EXISTS `quiz_membre`;
 CREATE TABLE IF NOT EXISTS `quiz_membre` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `login` text NOT NULL,
-  `pass_md5` text NOT NULL,
+  `login` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
   `email` varchar(100) NOT NULL,
   `nom` varchar(50) NOT NULL,
   `prenom` varchar(50) NOT NULL,
@@ -149,7 +152,9 @@ CREATE TABLE IF NOT EXISTS `quiz_membre` (
   `newletter` int NOT NULL DEFAULT '0',
   `ip` text NOT NULL,
   `date` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_quiz_membre_login` (`login`),
+  UNIQUE KEY `uq_quiz_membre_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
@@ -277,6 +282,20 @@ CREATE TABLE IF NOT EXISTS `quiz_statistique` (
   `quiz_utilisateur` int NOT NULL DEFAULT '1',
   UNIQUE KEY `index_stat` (`id_user`,`id_quiz`),
   KEY `fk_statistique_quiz` (`id_quiz`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `quiz_daily_traffic`
+-- Stores aggregate daily counts only; no IP address, user-agent, or visitor key.
+--
+DROP TABLE IF EXISTS `quiz_daily_traffic`;
+CREATE TABLE IF NOT EXISTS `quiz_daily_traffic` (
+  `daily` date NOT NULL,
+  `page_views` bigint unsigned NOT NULL DEFAULT '0',
+  `visitor_sessions` bigint unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`daily`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------

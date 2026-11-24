@@ -16,7 +16,8 @@ final class InteractionController
         private SubmitFeedback $submitFeedback,
         private ToggleQuizReaction $toggleReaction,
         private string $basePath,
-        private ?CaptchaVerifierInterface $captchaVerifier = null
+        private ?CaptchaVerifierInterface $captchaVerifier,
+        private bool $captchaMisconfigured
     ) {
     }
 
@@ -27,9 +28,16 @@ final class InteractionController
             $this->redirect('/accueil#commentaires');
         }
 
-        if ($this->captchaVerifier !== null && !$this->captchaVerifier->verify(
-            trim((string) ($_POST['g-recaptcha-response'] ?? '')),
-            (string) ($_SERVER['REMOTE_ADDR'] ?? '')
+        if ($this->captchaMisconfigured) {
+            $this->flash('error', 'L’envoi de commentaires est temporairement indisponible : la vérification anti-robot est mal configurée.');
+            $this->redirect('/accueil#commentaires');
+        }
+
+        $captchaResponse = $_POST['g-recaptcha-response'] ?? null;
+        if ($this->captchaVerifier !== null && (
+            !\is_string($captchaResponse)
+            || trim($captchaResponse) === ''
+            || !$this->captchaVerifier->verify(trim($captchaResponse), (string) ($_SERVER['REMOTE_ADDR'] ?? ''))
         )) {
             $this->flash('error', 'Veuillez valider la vérification anti-robot.');
             $this->redirect('/accueil#commentaires');

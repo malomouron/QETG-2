@@ -47,6 +47,42 @@ final class MySqlQuizRepository extends MySqlRepository implements QuizRepositor
         return (int) ($row['total'] ?? 0);
     }
 
+    public function searchVisibleByName(string $searchTerm, int $limit): array
+    {
+        $rows = $this->many(
+            'SELECT * FROM quiz WHERE nom_quiz LIKE ? AND (id_quiz_user = 0 OR (id_quiz_user = 1 AND quizComplet = 1 AND portee = 1)) ORDER BY id_quiz DESC LIMIT ?',
+            '%' . $searchTerm . '%',
+            max(1, min(100, $limit))
+        );
+
+        return array_map(fn (array $row): Quiz => $this->hydrate($row), $rows);
+    }
+
+    public function findMemberQuizzes(?string $searchTerm, ?int $quizId, int $limit): array
+    {
+        $limit = max(1, min(200, $limit));
+        if ($quizId !== null) {
+            $rows = $this->many(
+                'SELECT * FROM quiz WHERE id_quiz_user = 1 AND quizComplet = 1 AND id_quiz = ? ORDER BY id_quiz DESC LIMIT ?',
+                $quizId,
+                $limit
+            );
+        } elseif ($searchTerm !== null && trim($searchTerm) !== '') {
+            $rows = $this->many(
+                'SELECT * FROM quiz WHERE id_quiz_user = 1 AND quizComplet = 1 AND portee = 1 AND nom_quiz LIKE ? ORDER BY id_quiz DESC LIMIT ?',
+                '%' . trim($searchTerm) . '%',
+                $limit
+            );
+        } else {
+            $rows = $this->many(
+                'SELECT * FROM quiz WHERE id_quiz_user = 1 AND quizComplet = 1 AND portee = 1 ORDER BY id_quiz DESC LIMIT ?',
+                $limit
+            );
+        }
+
+        return array_map(fn (array $row): Quiz => $this->hydrate($row), $rows);
+    }
+
     public function recordView(int $id): void
     {
         $this->execute('UPDATE quiz SET vue = vue + 1 WHERE id_quiz = ?', $id);

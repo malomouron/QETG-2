@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace QETG\Infrastructure\Security;
 
+use Closure;
 use QETG\Application\Port\CaptchaVerifierInterface;
 
 final class GoogleRecaptchaVerifier implements CaptchaVerifierInterface
 {
-    public function __construct(private string $secretKey, private int $timeoutSeconds = 4)
+    private ?Closure $requester;
+
+    public function __construct(private string $secretKey, private int $timeoutSeconds = 4, ?callable $requester = null)
     {
+        $this->requester = $requester === null ? null : Closure::fromCallable($requester);
     }
 
     public function verify(string $responseToken, string $remoteAddress): bool
@@ -31,7 +35,10 @@ final class GoogleRecaptchaVerifier implements CaptchaVerifierInterface
             'ignore_errors' => true,
         )));
 
-        $response = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+        $timeout = max(1, min(10, $this->timeoutSeconds));
+        $response = $this->requester !== null
+            ? ($this->requester)($body, $timeout)
+            : @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
         if (!\is_string($response)) {
             return false;
         }

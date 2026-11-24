@@ -11,53 +11,55 @@ if (getenv('QETG_ALLOW_DEMO_SEED') !== '1') {
     exit(2);
 }
 
-require_once dirname(__DIR__) . '/functions.php';
+require_once dirname(__DIR__) . '/bootstrap/config.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-function seedOne(db $database, string $sql, mixed ...$parameters): ?array
+use QETG\Infrastructure\Persistence\MySQL\MySqlConnection;
+
+function seedOne(MySqlConnection $database, string $sql, mixed ...$parameters): ?array
 {
-    $row = $database->query($sql, ...$parameters)->fetchArray();
-    return $row === array() ? null : $row;
+    return $database->fetchOne($sql, ...$parameters);
 }
 
-function seedImage(db $database, string $source, string $alt): int
+function seedImage(MySqlConnection $database, string $source, string $alt): int
 {
     $row = seedOne($database, 'SELECT id_image FROM quiz_image WHERE src = ? LIMIT 1', $source);
     if ($row !== null) {
         return (int) $row['id_image'];
     }
 
-    $database->query('INSERT INTO quiz_image (src, alt) VALUES (?, ?)', $source, $alt);
-    return (int) $database->lastInsertID();
+    $database->execute('INSERT INTO quiz_image (src, alt) VALUES (?, ?)', $source, $alt);
+    return $database->lastInsertId();
 }
 
-function seedDifficulty(db $database, string $label): int
+function seedDifficulty(MySqlConnection $database, string $label): int
 {
     $row = seedOne($database, 'SELECT id_difficulte FROM quiz_difficulte WHERE libelle = ? LIMIT 1', $label);
     if ($row !== null) {
         return (int) $row['id_difficulte'];
     }
 
-    $database->query('INSERT INTO quiz_difficulte (libelle) VALUES (?)', $label);
-    return (int) $database->lastInsertID();
+    $database->execute('INSERT INTO quiz_difficulte (libelle) VALUES (?)', $label);
+    return $database->lastInsertId();
 }
 
-function seedAchievement(db $database, string $name, int $xp, string $description): int
+function seedAchievement(MySqlConnection $database, string $name, int $xp, string $description): int
 {
     $row = seedOne($database, 'SELECT id_succes FROM quiz_succes WHERE nom_succes = ? LIMIT 1', $name);
     if ($row !== null) {
         return (int) $row['id_succes'];
     }
 
-    $database->query(
+    $database->execute(
         'INSERT INTO quiz_succes (nom_succes, xp_succes, descri_succes) VALUES (?, ?, ?)',
         $name,
         $xp,
         $description
     );
-    return (int) $database->lastInsertID();
+    return $database->lastInsertId();
 }
 
-function seedQuiz(db $database, int $memberId, int $imageId, int $difficultyId, array $definition): array
+function seedQuiz(MySqlConnection $database, int $memberId, int $imageId, int $difficultyId, array $definition): array
 {
     $quiz = seedOne(
         $database,
@@ -68,7 +70,7 @@ function seedQuiz(db $database, int $memberId, int $imageId, int $difficultyId, 
     );
 
     if ($quiz === null) {
-        $database->query(
+        $database->execute(
             'INSERT INTO quiz (id_image_quiz, nom_quiz, bienvenue, xp, id_user, id_quiz_user, src, quizComplet, nbrQuestion, portee, vue) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, 1, 0)',
             $imageId,
             $definition['name'],
@@ -79,7 +81,7 @@ function seedQuiz(db $database, int $memberId, int $imageId, int $difficultyId, 
             $definition['image'],
             count($definition['questions'])
         );
-        $quizId = (int) $database->lastInsertID();
+        $quizId = $database->lastInsertId();
     } else {
         $quizId = (int) $quiz['id_quiz'];
     }
@@ -88,7 +90,7 @@ function seedQuiz(db $database, int $memberId, int $imageId, int $difficultyId, 
     if ($existingQuestion === null) {
         foreach ($definition['questions'] as $index => $questionData) {
             $number = $index + 1;
-            $database->query(
+            $database->execute(
                 'INSERT INTO quiz_question (id_quiz, id_image_question, texte_bienvenue, id_difficulte, question_texte, numero_question, nbrReponse) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 $quizId,
                 $imageId,
@@ -98,10 +100,10 @@ function seedQuiz(db $database, int $memberId, int $imageId, int $difficultyId, 
                 $number,
                 count($questionData['answers'])
             );
-            $questionId = (int) $database->lastInsertID();
+            $questionId = $database->lastInsertId();
 
             foreach ($questionData['answers'] as $answerIndex => $answerData) {
-                $database->query(
+                $database->execute(
                     'INSERT INTO quiz_reponse (id_question, id_image_reponse, choix_possible_quiz, reponseOK, texte_reponse_explicatif, num_reponse) VALUES (?, ?, ?, ?, ?, ?)',
                     $questionId,
                     $imageId,
@@ -117,7 +119,7 @@ function seedQuiz(db $database, int $memberId, int $imageId, int $difficultyId, 
     return array('id' => $quizId, 'definition' => $definition);
 }
 
-function seedStatistic(db $database, int $memberId, int $quizId, int $score, bool $favorite, bool $memberQuiz): void
+function seedStatistic(MySqlConnection $database, int $memberId, int $quizId, int $score, bool $favorite, bool $memberQuiz): void
 {
     $existing = seedOne(
         $database,
@@ -129,7 +131,7 @@ function seedStatistic(db $database, int $memberId, int $quizId, int $score, boo
         return;
     }
 
-    $database->query(
+    $database->execute(
         'INSERT INTO quiz_statistique (id_user, id_quiz, `date`, note, favoris, quiz_utilisateur) VALUES (?, ?, ?, ?, ?, ?)',
         $memberId,
         $quizId,
@@ -140,7 +142,7 @@ function seedStatistic(db $database, int $memberId, int $quizId, int $score, boo
     );
 }
 
-function seedAchievementGrant(db $database, int $memberId, int $achievementId): void
+function seedAchievementGrant(MySqlConnection $database, int $memberId, int $achievementId): void
 {
     $existing = seedOne(
         $database,
@@ -152,7 +154,7 @@ function seedAchievementGrant(db $database, int $memberId, int $achievementId): 
         return;
     }
 
-    $database->query(
+    $database->execute(
         'INSERT INTO quiz_membre_succes (id_succes, id_membre, date_succes) VALUES (?, ?, ?)',
         $achievementId,
         $memberId,
@@ -160,14 +162,14 @@ function seedAchievementGrant(db $database, int $memberId, int $achievementId): 
     );
 }
 
-function seedReaction(db $database, int $quizId, string $ip, int $value, bool $memberQuiz): void
+function seedReaction(MySqlConnection $database, int $quizId, string $ip, int $value, bool $memberQuiz): void
 {
     $existing = seedOne($database, 'SELECT id_like FROM quiz_like_quiz WHERE id_quiz = ? AND ip = ? LIMIT 1', $quizId, $ip);
     if ($existing !== null) {
         return;
     }
 
-    $database->query(
+    $database->execute(
         'INSERT INTO quiz_like_quiz (id_quiz, ip, likeOrDislike, esQuizUser) VALUES (?, ?, ?, ?)',
         $quizId,
         $ip,
@@ -176,7 +178,7 @@ function seedReaction(db $database, int $quizId, string $ip, int $value, bool $m
     );
 }
 
-$database = new db($dbhost, $dbuser, $dbpass, $dbname);
+$database = new MySqlConnection($dbhost, $dbuser, $dbpass, $dbname);
 $member = seedOne($database, 'SELECT id FROM quiz_membre WHERE login = ? LIMIT 1', 'malo');
 if ($member === null) {
     fwrite(STDERR, "No existing member with login 'malo' was found; no demo data was written.\n");
@@ -188,6 +190,9 @@ $database->beginTransaction();
 try {
     $difficultySimple = seedDifficulty($database, 'Simple');
     $difficultyNormal = seedDifficulty($database, 'Intermédiaire');
+    seedDifficulty($database, 'Très simple');
+    seedDifficulty($database, 'Difficile');
+    seedDifficulty($database, 'Très difficile');
     $imageHtml = seedImage($database, 'assets/images/community/image-quiz-HTML.png', 'Illustration de quiz HTML');
     $imageCss = seedImage($database, 'assets/images/community/image-quiz-css.jpg', 'Illustration de quiz CSS');
     $imageGeography = seedImage($database, 'assets/images/community/image-quiz-geographie.jpg', 'Illustration de quiz géographie');
@@ -251,9 +256,7 @@ try {
     seedAchievementGrant($database, $memberId, $firstQuizAchievement);
     seedAchievementGrant($database, $memberId, $quizCreatorAchievement);
 
-    if (!$database->commit()) {
-        throw new RuntimeException('Unable to commit the demo seed transaction.');
-    }
+    $database->commit();
 
     fwrite(STDOUT, "Demo seed completed for existing member 'malo' (id {$memberId}).\n");
     fwrite(STDOUT, "Added or reused 5 demo quizzes, 2 difficulties, 5 images, 2 achievements, quiz history and demo reactions.\n");

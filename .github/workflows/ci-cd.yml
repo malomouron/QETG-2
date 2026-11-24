@@ -8,6 +8,23 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check PHP, JavaScript and Bash syntax
+        run: |
+          git ls-files -z -- '*.php' | xargs -0 -r -n 1 php -l
+          git ls-files -z -- '*.js' | xargs -0 -r -n 1 node --check
+          git ls-files -z -- '*.sh' | xargs -0 -r -n 1 bash -n
+
   checks:
     runs-on: ubuntu-latest
     strategy:
@@ -17,19 +34,36 @@ jobs:
       PHP_VERSION: ${{ matrix.php-version }}
     steps:
       - uses: actions/checkout@v4
-      - name: Validate Compose configuration
-        run: docker compose config --quiet
-      - name: Build and test the legacy application with Compose
-        run: |
-          docker compose -p qetg-ci -f compose.yml -f tests/compose.integration.yml up --build --abort-on-container-exit --exit-code-from app
-      - name: Remove test containers and volumes
+      - name: Build and test with isolated Compose services
+        run: bash tests/run-ci.sh
+
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      QETG_MIN_LINE_COVERAGE: '80'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Measure PHP line coverage with Xdebug
+        shell: bash
+        run: bash tests/run-coverage.sh | tee coverage.txt
+      - name: Add coverage to the workflow summary
         if: always()
-        run: docker compose -p qetg-ci -f compose.yml -f tests/compose.integration.yml down --volumes --remove-orphans
+        run: |
+          if [ -s coverage.txt ]; then
+            { echo '### PHP line coverage'; echo '```text'; cat coverage.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: php-coverage
+          path: coverage.txt
 
   publish:
-    needs: checks
+    needs: [lint, checks, coverage]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
     permissions:
       contents: read
       packages: write
@@ -49,6 +83,7 @@ jobs:
             type=raw,value=latest
             type=sha,prefix=sha-
       - uses: docker/build-push-action@v6
+        id: image
         with:
           context: .
           file: Dockerfile
@@ -57,3 +92,50 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    needs: publish
+    if: vars.QETG_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    concurrency:
+      group: qetg-production
+      cancel-in-progress: false
+    steps:
+      - name: Deploy the verified image over SSH
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_DIGEST: ${{ needs.publish.outputs.digest }}
+          DEPLOY_HOST: ${{ vars.QETG_DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.QETG_DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.QETG_DEPLOY_PATH }}
+          DEPLOY_KEY: ${{ secrets.QETG_DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.QETG_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          main_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
+          if [[ "$main_sha" != "$GITHUB_SHA" ]]; then
+            echo 'Skipping deployment: this commit is no longer the head of main.'
+            exit 0
+          fi
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$DEPLOY_PATH" =~ ^/[a-zA-Z0-9_./-]+$ ]]
+          [[ -n "$DEPLOY_KEY" && -n "$DEPLOY_KNOWN_HOSTS" ]]
+          umask 077
+          ssh_dir=$(mktemp -d)
+          trap 'rm -rf "$ssh_dir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=15 -o UserKnownHostsFile="$ssh_dir/known_hosts" \
+            -i "$ssh_dir/key" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "bash -se -- '$DEPLOY_PATH' '$IMAGE_DIGEST'" <<'REMOTE'
+          cd "$1"
+          test -f compose.yml
+          test -f .env
+          export QETG_IMAGE="ghcr.io/malomouron/qetg-2@$2"
+          docker compose pull app
+          docker compose up -d --no-build --no-deps --wait --wait-timeout 120 app
+          REMOTE

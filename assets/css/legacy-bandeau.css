@@ -1,0 +1,15 @@
+.legacy-site-header { position: relative; z-index: 5; display: flex; min-height: 64px; align-items: center; gap: 20px; padding: 9px clamp(16px, 4vw, 48px); border-bottom: 1px solid rgba(15,35,50,.12); background: #3cb2ff; color: #17232c; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.legacy-site-brand { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 9px; color: inherit; font-size: 15px; font-weight: 850; text-decoration: none; }
+.legacy-site-brand img { width: 36px; height: 36px; border: 2px solid currentColor; border-radius: 11px; padding: 3px; object-fit: contain; }
+.legacy-site-nav, .legacy-site-actions { display: flex; align-items: center; gap: 8px; }
+.legacy-site-nav { flex: 1 1 auto; }
+.legacy-site-nav a, .legacy-site-actions > a { border-radius: 999px; padding: 8px 10px; color: inherit; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.legacy-site-nav a:hover, .legacy-site-actions > a:hover { background: rgba(0,35,75,.12); }
+.legacy-site-actions { justify-content: flex-end; flex-wrap: wrap; }
+.legacy-site-actions form { display: flex; min-width: 150px; border: 1px solid rgba(20,40,55,.2); border-radius: 999px; background: rgba(255,255,255,.82); }
+.legacy-site-actions input { width: 100%; min-width: 0; border: 0; outline: 0; border-radius: 999px; padding: 7px 10px; background: transparent; font: inherit; font-size: 12px; }
+.legacy-site-actions form button { border: 0; border-radius: 50%; padding: 0 10px; background: transparent; color: #126da8; font-size: 17px; cursor: pointer; }
+.legacy-help-link { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border: 1px solid rgba(20,40,55,.22); border-radius: 50%; color: #17232c; font-size: 16px; font-weight: 850; text-decoration: none; }
+.legacy-help-link:hover { background: rgba(0,35,75,.12); }
+@media (max-width: 1000px) { .legacy-site-header { flex-wrap: wrap; } .legacy-site-nav { order: 3; width: 100%; overflow-x: auto; } .legacy-site-nav a { flex: 0 0 auto; } }
+@media (max-width: 600px) { .legacy-site-header { gap: 8px; padding: 8px 12px; } .legacy-site-brand span { display: none; } .legacy-site-nav { gap: 2px; } .legacy-site-nav a, .legacy-site-actions > a { padding: 7px; font-size: 11px; } .legacy-site-actions { margin-left: auto; } .legacy-site-actions form { min-width: 110px; } }

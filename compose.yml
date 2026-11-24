@@ -23,11 +23,18 @@ services:
       SMTP_ENCRYPTION: ${SMTP_ENCRYPTION:-ssl}
       SMTP_BCC: ${SMTP_BCC:-}
       RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:-}
       APP_PRIVATE_KEY: ${APP_PRIVATE_KEY:-}
       QUIZZES_PER_PAGE: ${QUIZZES_PER_PAGE:-5}
     ports:
       - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:80"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/', false, stream_context_create(['http' => ['follow_location' => 0, 'timeout' => 3]])) === false ? 1 : 0);"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     volumes:
       - quiz_uploads:/var/www/html/uploads/quizzes
       - profile_uploads:/var/www/html/uploads/avatars

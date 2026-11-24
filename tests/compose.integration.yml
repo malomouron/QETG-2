@@ -1,0 +1,42 @@
+services:
+  app:
+    build:
+      context: ..
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.5}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      QETG_ENV_CONFIG: '1'
+      APP_URL: http://localhost/
+      DB_HOST: db
+      DB_DATABASE: test
+      DB_USERNAME: qetg_ci
+      DB_PASSWORD: ci-app-only
+      APP_PRIVATE_KEY: qetg-ci-only-application-key-000000000000000000000000000000
+    volumes:
+      - .:/var/www/html/tests:ro
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: test
+      MYSQL_USER: qetg_ci
+      MYSQL_PASSWORD: ci-app-only
+      MYSQL_ROOT_PASSWORD: ci-root-only
+    healthcheck:
+      test: ['CMD-SHELL', 'MYSQL_PWD="$$MYSQL_ROOT_PASSWORD" mysql --protocol=tcp -h 127.0.0.1 -u root -e "SELECT 1 FROM test.quiz_difficulte LIMIT 1"']
+      interval: 3s
+      timeout: 5s
+      retries: 40
+    volumes:
+      - database:/var/lib/mysql
+      - ../QETG.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+
+networks:
+  default:
+    internal: true
+
+volumes:
+  database:

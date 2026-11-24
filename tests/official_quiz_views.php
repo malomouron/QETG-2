@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 session_start();
 require_once dirname(__DIR__) . '/vendor/autoload.php';
-require_once dirname(__DIR__) . '/functions.php';
+require_once dirname(__DIR__) . '/bootstrap/legacy.php';
 
 use QETG\Domain\Entity\Answer;
 use QETG\Domain\Entity\Difficulty;

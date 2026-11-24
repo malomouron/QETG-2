@@ -23,7 +23,9 @@ final class HomeController
         private CommentRepositoryInterface $comments,
         private CommentReplyRepositoryInterface $commentReplies,
         private int $quizzesPerPage,
-        private string $basePath
+        private string $basePath,
+        private string $captchaSiteKey,
+        private bool $captchaMisconfigured
     ) {
     }
 
@@ -77,16 +79,13 @@ final class HomeController
 
         $basePath = $this->basePath;
         $homeUrl = $basePath . '/accueil';
-        $searchUrl = $basePath . '/search.php';
+        $searchUrl = $basePath . '/recherche';
         $loggedIn = $member !== null;
         $isAdmin = $loggedIn && $member->isAdministrator;
         $displayLogin = $loggedIn ? $member->login : '';
         $displayName = $loggedIn ? trim($member->firstName . ' ' . $member->lastName) : '';
-        $siteKey = (string) ($GLOBALS['site_key'] ?? '');
-        $captchaSecret = (string) ($GLOBALS['myprivatekey'] ?? '');
-        if ($captchaSecret === '') {
-            $siteKey = '';
-        }
+        $siteKey = $this->captchaSiteKey;
+        $captchaMisconfigured = $this->captchaMisconfigured;
         $interactionFlash = $_SESSION['interaction_flash'] ?? null;
         unset($_SESSION['interaction_flash']);
         if (!isset($_SESSION['interaction_csrf']) || !\is_string($_SESSION['interaction_csrf'])) {

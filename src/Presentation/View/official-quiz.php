@@ -1,45 +1,20 @@
 <?php
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$assetUrl = static function (string $path) use ($basePath): string {
-    if (preg_match('#^(?:[a-z][a-z0-9+.-]*:|//)#i', $path) === 1) {
-        return $path;
-    }
-    return rtrim($basePath, '/') . '/' . ltrim($path, '/');
-};
+$escape = array(\QETG\Presentation\View\Shared\ViewHelpers::class, 'escape');
+$assetUrl = static fn (?string $path): string => \QETG\Presentation\View\Shared\ViewHelpers::assetUrl($path, $basePath);
 $flash = $_SESSION['official_quiz_flash'] ?? null;
 unset($_SESSION['official_quiz_flash']);
 $css = array(
     $basePath . '/css.css',
-    $basePath . '/commun/bandeau.css',
-    $basePath . '/resources/assets/css/home.css',
-    $basePath . '/resources/assets/css/official-quiz.css',
+    $basePath . '/assets/css/legacy-bandeau.css',
+    $basePath . '/assets/css/home.css',
+    $basePath . '/assets/css/official-quiz.css',
 );
 $title = $page === 'presentation' && isset($quiz) ? $quiz->name : 'Quiz officiel';
+\QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentStart($title, $css, 'home-page official-quiz-page');
 ?>
-<!doctype html>
-<html lang="fr">
-<head>
-<?php afficher_head($title, $css, 'UTF-8'); ?>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body class="home-page official-quiz-page">
 <div class="home-shell">
-    <header class="bandeau home-header">
-        <a class="home-brand" href="<?= $escape($basePath) ?>/accueil"><img src="<?= $escape($basePath) ?>/assets/images/community/icon.png" alt="" class="home-brand-icon"><span>Quiz en tout genre</span></a>
-        <nav class="home-nav" aria-label="Navigation principale">
-            <a href="<?= $escape($basePath) ?>/accueil">Accueil</a>
-            <a href="<?= $escape($basePath) ?>/quiz_utilisateur.php">Quiz membres</a>
-            <a href="<?= $escape($basePath) ?>/aide">Aide</a>
-        </nav>
-        <div class="home-account">
-            <?php if (isset($_SESSION['login'])): ?>
-                <a class="home-account-link" href="<?= $escape($basePath) ?>/compte/profil"><?= $escape((string) $_SESSION['login']) ?></a>
-            <?php else: ?>
-                <a class="home-account-link" href="<?= $escape($basePath) ?>/connexion">Connexion</a>
-            <?php endif; ?>
-        </div>
-    </header>
+    <?php require __DIR__ . '/Shared/site-header.php'; ?>
 
     <main class="official-quiz-main">
         <?php if (is_array($flash) && isset($flash['message'])): ?>
@@ -131,7 +106,6 @@ $title = $page === 'presentation' && isset($quiz) ? $quiz->name : 'Quiz officiel
         <?php endif; ?>
     </main>
 
-    <footer class="home-footer"><p>Quiz en tout genre · Créé par Malo MOURON</p><nav aria-label="Navigation de pied de page"><a href="<?= $escape($basePath) ?>/accueil">Accueil</a><a href="<?= $escape($basePath) ?>/aide">Aide</a><a href="<?= $escape($basePath) ?>/a-propos">À propos</a></nav></footer>
+    <?php require __DIR__ . '/Shared/site-footer.php'; ?>
 </div>
-</body>
-</html>
+<?php \QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentEnd(); ?>

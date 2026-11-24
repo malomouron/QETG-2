@@ -8,83 +8,67 @@ Les principales catégories d'utilisateur visibles dans le code sont le visiteur
 
 ## 1. Découverte et consultation des quiz
 
-- La page d'accueil présente les quiz intégrés au site, avec pagination, illustrations, descriptions et indicateurs de popularité ; pour un membre connecté, elle affiche aussi le nombre de quiz réalisés (`index.php`, notamment lignes 1-363, `commun/bandeau.php`).
-- La recherche de quiz est accessible depuis la navigation (`search.php`).
-- Le catalogue des quiz publiés par les membres permet de rechercher par nom, de consulter les indicateurs de popularité, de voir les classements par réactions et par vues, et d'afficher les quiz publics. Une recherche par identifiant est également proposée pour les quiz privés (`quiz_utilisateur.php`, notamment lignes 1-134 et sections de classement).
-- Les quiz sont présentés avec leur nom, image, créateur, nombre de vues et réactions (`quiz_utilisateur.php`, `Quiz-presentation.php`, `makeQuiz.php`).
-- La page d'aide existe, mais son contenu indique qu'elle n'est pas opérationnelle ; son formulaire cible `search-aide.php`, absent du dépôt (`aide-page.php`).
-- Une page autonome « Sortie Ciné » est également présente sans intégration apparente au parcours des quiz (`SortiCine.php`).
+- La page d'accueil présente les quiz intégrés au site, avec pagination, illustrations, descriptions et indicateurs de popularité ; pour un membre connecté, elle affiche aussi le nombre de quiz réalisés (`index.php` et ses vues).
+- La recherche de quiz est accessible depuis la navigation (`GET /recherche?search=…`) ; le parcours routé affiche les quiz officiels et les quiz membres terminés et publics. Aucun adaptateur `search.php` n’est maintenu.
+- La page communautaire routée (`GET /quiz-membres`) propose le catalogue des quiz membres publics, la recherche par nom ou par identifiant pour les quiz privés, les quiz personnels (brouillons et publiés), les classements par score de réactions/vues, les quiz appréciés, les comptes suivis et la découverte/recherche de membres. L’ancien fichier `quiz_utilisateur.php` n’est plus présent et aucune redirection de compatibilité n’est enregistrée.
+- Les quiz sont présentés avec leur nom, image, créateur, nombre de vues et réactions sur le catalogue communautaire routé. Le jeu membre affiche les propositions, le score, les bonnes réponses et les explications ; les participations des membres alimentent l’historique.
+- La page d’aide (`GET /aide`) propose une FAQ filtrable côté navigateur et des liens vers les parcours d’assistance. La page de présentation du site est disponible sur `GET /a-propos`.
 
 ## 2. Participation aux quiz
 
-- Le joueur consulte la présentation d'un quiz puis répond à ses questions (`Quiz-presentation.php`, `makeQuiz.php`, `question.php`).
-- Une question peut proposer plusieurs réponses, une difficulté, une image et un texte d'explication associé aux réponses (`QETG.sql`, `question.php`, `reponse.php`).
-- Le parcours affiche un retour en cas de réponse correcte ou incorrecte et permet de continuer ou de recommencer le quiz (`reponse.php`).
-- Les quiz créés par des membres se passent dans un formulaire dédié ; la note, les bonnes réponses et les explications sont affichées à la soumission (`makeQuiz.php`, lignes 1-174).
-- Pour les membres, les résultats des quiz intégrés et des quiz de membres sont enregistrés pour l'historique du profil (`reponse.php`, `makeQuiz.php`, `profil.php`, table `quiz_statistique`).
+- Le joueur officiel utilise `GET /quiz-officiel?id=…`, `GET /quiz/question?id_quiz=…&numero_question=…` et `POST /quiz/reponse`. Il affiche la progression et les retours corrects/incorrects ; les anciens scripts `Quiz-presentation.php`, `question.php` et `reponse.php` ne sont pas maintenus.
+- Une question peut proposer plusieurs réponses, une difficulté, une image et un texte d’explication associé aux réponses (`QETG.sql`, `OfficialQuizController`).
+- Les quiz créés par des membres se jouent sur `GET /quiz-membres/jouer?id=…` et se soumettent sur `POST /quiz-membres/reponse` ; le score, les bonnes réponses et les explications sont affichés par la vue du parcours.
+- Pour les membres, les résultats des quiz officiels et des quiz de membres sont enregistrés pour l’historique dans `quiz_statistique`.
 
 ## 3. Création et gestion des quiz par les membres
 
-- Un membre connecté peut créer un quiz et ajouter des questions et réponses, avec des images et un choix de visibilité public ou privé (`poster_quiz.php`, `poster_quiz_action.php`).
-- La création prévoit un nom, une description d'accueil, une image de présentation, un nombre de questions, une difficulté par question et une réponse correcte avec explication.
-- Le membre dispose d'un espace listant ses quiz. Il peut reprendre la préparation d'un quiz incomplet, modifier ou supprimer un quiz publié (`quiz_utilisateur.php`, `poster_quiz.php`, `deleteQuiz.php`).
+- Un membre connecté peut créer et modifier un quiz sur les routes `/quiz-membres/editeur` et `/quiz-membres/enregistrer`. Les quiz, questions et réponses sont enregistrés via `SaveMemberQuiz` dans une transaction ; la suppression utilise une action POST avec CSRF du profil.
+- L’éditeur prévoit un nom, une description, une image de présentation, 1 à 100 questions, une difficulté par question, 2 à 5 réponses, une réponse correcte et une explication facultative. Les couvertures sont contrôlées par MIME et limitées à 4 Mo.
+- Le membre dispose de l’onglet « Mes quiz » dans `/quiz-membres`, qui permet de reprendre/modifier ses quiz et de supprimer un quiz publié ou brouillon.
 - La publication et la visibilité reposent sur les champs `quizComplet`, `portee`, `id_quiz_user` et `id_user` de la table `quiz` (`QETG.sql`).
 
 ## 4. Comptes et profil membre
 
-- Les parcours d'inscription, d'identification, de déconnexion et de confirmation d'adresse e-mail sont présents (`inscription.php`, `identifier.php`, `deconnexion.php`, `email_confirmation.php`, `confirmation.php`).
-- La connexion accepte un login ou une adresse e-mail. Le parcours de mot de passe oublié prévoit l'envoi d'un nouveau mot de passe par e-mail (`identifier.php`, `mot-pass-oublier.php`, `changer.php`, `mail.php`).
-- Le schéma conserve le nom historique `pass_md5`. Les nouveaux mots de passe utilisent un hachage moderne ; les hachages MD5 historiques sont mis à niveau après une connexion réussie (`QETG.sql`, `functions.php`, `identifier.php`).
-- Un membre peut consulter son profil, son niveau, son expérience, ses succès et son historique de quiz (`profil.php`, tables `quiz_membre_succes`, `quiz_succes`, `quiz_statistique`).
-- Il peut également consulter le profil d'un autre membre via `profil.php?u=...` (`profil.php`).
-- Le profil propose le choix d'un avatar fourni par le site ou le téléversement d'une image (`profil.php`, `changer-image-profil.php`).
-- Des formulaires de modification des informations du compte et de suppression du compte sont présents (`profil.php`, `changer.php`, `supr-compte_prof.php`).
-- Le sélecteur de langue redirige vers le site français ou Google Translate ; il ne s'agit pas d'un système de traduction interne (`profil.php`).
+- Les parcours d'inscription, de connexion, de déconnexion et de confirmation d'adresse e-mail sont routés par `AccountController` et utilisent `PhpMailerEmailSender`.
+- La connexion accepte un login ou une adresse e-mail. Le mot de passe oublié utilise un jeton de réinitialisation à durée limitée; les changements et réinitialisations utilisent `ChangeMemberPassword` et `ResetMemberPassword`.
+- Les mots de passe sont stockés dans `quiz_membre.password_hash` et `quiz_cle.cle_password_hash`. `PasswordHasher` utilise Argon2id lorsqu'il est disponible, sinon l'algorithme sécurisé par défaut de PHP ; aucune connexion MD5 n'est acceptée. Après migration des bases existantes, les comptes qui avaient un ancien MD5 doivent réinitialiser leur mot de passe par e-mail.
+- Un membre peut consulter et modifier son profil, son niveau, son expérience, ses succès et son historique sur `GET /compte/profil` (tables `quiz_membre_succes`, `quiz_succes`, `quiz_statistique`).
+- Il peut également consulter le profil public d'un autre membre via `GET /profil-public?id=...` ; l’ancienne URL `profil.php?u=...` reste compatible par redirection.
+- Le profil propose le choix d'un avatar fourni par le site ou le téléversement d'une image via `AccountController`.
+- Les formulaires de modification des informations du compte et de suppression du compte sont présents dans l’espace membre routé.
+- Le sélecteur de langue redirige vers Google Translate ; il ne s'agit pas d'un système de traduction interne.
 
 ## 5. Communauté et interactions
 
-- Les quiz peuvent recevoir des appréciations positives ou négatives, avec affichage des compteurs et des réactions (`likedislike.php`, `likedislike_user.php`, `quiz_utilisateur.php`).
-- Les membres peuvent marquer comme favoris les quiz effectués ; leurs favoris sont visibles depuis le profil (`changer-en-favoris.php`, `changer-en-non-favoris.php`, `profil.php`).
-- Le formulaire de commentaire de l'accueil est associé à un traitement avec validation reCAPTCHA et envoi d'e-mail (`index.php`, `envoyer-mail.php`). Les commentaires et les réponses sont affichés séparément (`afficher-commentaire.php`, `reponse_commentaire.php`; tables `quiz_commentaire`, `quiz_reponse_commentaire`).
-- Une action de signalement d'utilisateur existe (`signal.php`, table `quiz_signalement`). Le motif et son traitement ne sont pas explicités dans l'interface repérée.
-- Des fonctions d'abonnement et de consultation/ajout de comptes suivis sont présentes (`abonnement.php`, `desabonnement.php`, `quiz_utilisateur.php`, table `quiz_subscription_membre`).
-- La préférence newsletter peut être associée à un compte ; un parcours d'inscription/désabonnement et un script de campagne e-mail sont présents, mais l'enchaînement complet n'est pas clairement établi (`inscription.php`, `newletter.php`, `desabonnement.php`).
-- Les membres peuvent consulter des classements de quiz, notamment par réactions et par vues (`quiz_utilisateur.php`).
+- Les quiz peuvent recevoir des appréciations positives ou négatives, avec affichage des compteurs et de la réaction courante ; les mutations utilisent `POST /interactions/reaction` et `ToggleQuizReaction`.
+- Les membres peuvent marquer comme favoris les quiz effectués depuis leur profil ; l’action utilise `POST /compte/favori`, un jeton CSRF et le cas d’usage `SetQuizFavorite`. Les anciennes routes GET de favoris ne font pas de mutation.
+- Le formulaire de commentaire de l'accueil est protégé par CSRF et peut envoyer une notification par e-mail. La validation reCAPTCHA s'active avec les deux clés Google ; sans clé, le formulaire fonctionne sans CAPTCHA, et avec une seule clé, seul l'envoi de nouveaux commentaires est indisponible. Les membres répondent avec `POST /interactions/reponse-commentaire`, protégé par CSRF et traité par `SubmitCommentReply`; les réponses sont affichées sous le commentaire correspondant.
+- Le signalement d'un profil est disponible aux membres connectés via un formulaire POST protégé par CSRF (`/communaute/signalement`, table `quiz_signalement`). Un même membre ne peut signaler une cible qu'une seule fois ; l'ancienne URL `signal.php?id=…` redirige vers le profil sans écrire sur GET.
+- Le suivi et le désabonnement depuis la page communautaire utilisent `POST /communaute/abonnement`, un jeton CSRF et le cas d’usage `SetMemberSubscription` (`quiz_subscription_membre`).
+- La préférence newsletter est modifiable depuis le profil. `GET /newsletter/desabonnement` ouvre une confirmation et le désabonnement est appliqué au POST avec un jeton signé. L’envoi de campagne est disponible en CLI via `SendNewsletterCampaign` et `bin/send-newsletter.php`.
+- Les membres peuvent consulter des classements de quiz par réactions et par vues dans l’onglet « Classements » de `/quiz-membres`.
 
-## 6. Administration du contenu
+## 6. Administration et modération
 
-- Un espace d'administration est exposé aux comptes dont le champ `admin` vaut `1` (`admin.php`, `quiz_membre.admin`).
-- Les opérations disponibles dans le tableau de bord sont :
-
-| Domaine | Opérations proposées | Pages représentatives |
-|---|---|---|
-| Quiz | Créer, modifier, supprimer | `admin/creer_quiz.php`, `admin/modifier_quiz.php`, `admin/suprimer_quiz.php` |
-| Questions | Créer, modifier, supprimer | `admin/creer_question.php`, `admin/modifier_question.php`, `admin/suprimer_question.php` |
-| Réponses | Créer, modifier, supprimer | `admin/creer_reponse.php`, `admin/modifier_reponse.php`, `admin/suprimer_reponse.php` |
-| Utilisateurs | Créer, modifier, supprimer | `admin/creer_utilisateur.php`, `admin/modifier_utilisateur.php`, `admin/suprimer_utilisateur.php` |
-| Statistiques | Créer, modifier, supprimer | `admin/creer_statistique.php`, `admin/modifier_statistique.php`, `admin/suprimer_statistique.php` |
-| Commentaires | Créer, modifier, supprimer | `admin/creer_commentaire.php`, `admin/modifier_commentaire.php`, `admin/suprimer_commentaire.php` |
-| Images | Ajouter, modifier | `admin/creer_image.php`, `admin/modifier_image.php` |
-
-- Les traitements de formulaires correspondants se trouvent en majorité dans `admin/action-form/`.
-- Le tableau de bord visible ne propose pas de rubrique dédiée à la modération des signalements.
-- Le modèle de données contient aussi des tables de succès, de difficultés, de progression, de signalements et d'abonnements (`QETG.sql`).
+- Le tableau de bord `GET /administration` est réservé aux comptes dont `quiz_membre.admin` vaut `1`. Il affiche les totaux de membres, de quiz officiels et communautaires, de signalements et de participations terminées.
+- Le catalogue paginé des quiz officiels permet de publier un quiz avec ses questions et réponses, ou de supprimer un quiz officiel après confirmation. Le tableau de bord ne propose pas de modification des quiz officiels existants.
+- La liste paginée regroupe les signalements par compte. Après confirmation, un administrateur peut supprimer un compte signalé et ses contenus communautaires. Un compte administrateur ou propriétaire de quiz officiels ne peut pas être supprimé par ce parcours.
+- Les actions de publication et de suppression utilisent des formulaires POST protégés par un jeton CSRF. L’ancien `GET /admin.php` redirige vers le tableau de bord ; les anciens écrans et formulaires du dossier `admin/` ne sont plus disponibles.
 
 ## 7. Contact, information et préférences
 
-- Le site comprend des formulaires de contact/commentaire, une gestion de newsletter et des fonctionnalités d'envoi d'e-mail (`envoyer-mail.php`, `afficher-commentaire.php`, `newletter.php`, `mail.php`).
-- Des pages d'aide et de présentation du site sont présentes (`aide-page.php`, `aide.php`, `lien-bandeau/`).
-- L'interface inclut une bannière de gestion des cookies avec Tarteaucitron et des services Google/reCAPTCHA configurés dans le code (`functions.php`, dépendance npm `tarteaucitronjs`).
-- Un lien de don externe est proposé depuis le profil (`profil.php`).
+- Le site comprend des formulaires de commentaire/réponse, l’envoi de newsletter par commande CLI, les confirmations de compte et les réinitialisations de mot de passe via `PhpMailerEmailSender`.
+- Les pages d’aide et de présentation du site sont accessibles par `GET /aide` et `GET /a-propos`.
+- L'interface inclut une bannière de gestion des cookies avec Tarteaucitron (dépendance npm `tarteaucitronjs`). Le service Google reCAPTCHA n'est proposé que sur les pages affichant le widget.
+- Un lien de don externe est proposé depuis la vue du profil membre.
 
 ## Configuration et limites de l'inventaire
 
 - `QETG.sql` crée puis sélectionne une base nommée `test`. La valeur `$dbname` dans `config.inc.php` doit correspondre à la base réellement importée, ou le dump doit être adapté avant import.
 - Le dump SQL contient des `DROP TABLE` avant la recréation de ses tables : réimporter ce fichier peut donc supprimer les données déjà présentes dans ces tables.
 - Le dépôt ne contient pas `config.inc.php` (fichier local de configuration) ; les paramètres e-mail, base de données et services externes dépendent donc de l'installation.
-- La recherche d'aide cible `search-aide.php`, absent du dépôt, et l'aide indique explicitement ne pas être opérationnelle (`aide-page.php`).
-- Le parcours de publication contient des liens vers `poster_question.php` et `poster_reponse.php`, absents de la racine du dépôt ; vérifier ce chemin de reprise d'un quiz incomplet avant de considérer le parcours opérationnel de bout en bout (`functions.php`).
+- Les anciennes pages `aide-page.php`, `aide.php`, `search-aide.php`, `poster_question.php`, `poster_reponse.php` et `reponse_commentaire.php` ne sont pas présentes et ne sont pas maintenues comme adaptateurs. Les parcours actuels sont ceux des routes décrites plus haut.
 - Certains liens historiques de traduction restent liés au site et au préfixe `/quiz/` d'origine. Les principaux liens locaux de navigation et de partage ont été rendus indépendants du nom du dossier, mais les autres chemins doivent encore être vérifiés.
-- Certains écrans d'administration référencent des noms de tables comme `image`, `membre` ou `question`, alors que le schéma fourni définit notamment `quiz_image`, `quiz_membre` et `quiz_question`. Ces écrans peuvent dépendre d'une version de base différente et doivent être vérifiés avant utilisation.
-- Les quiz officiels enregistrent et reprennent la progression des membres via `quiz_progression` (`question.php`, `Quiz-presentation.php`).
+- Les quiz officiels enregistrent et reprennent la progression des membres via `quiz_progression` dans le contrôleur routé des quiz officiels.
 - Les noms de colonnes et les chemins présents dans la documentation décrivent l'implémentation actuelle, pas une spécification contractuelle. Les fonctions doivent être vérifiées sur une installation avec base et services configurés.

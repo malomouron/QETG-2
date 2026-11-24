@@ -18,10 +18,18 @@ use QETG\Domain\Repository\ImageRepositoryInterface;
 use QETG\Domain\Repository\AchievementRepositoryInterface;
 use QETG\Domain\Repository\MemberAchievementRepositoryInterface;
 use QETG\Domain\Repository\QuizReactionRepositoryInterface;
+use QETG\Domain\Service\PasswordHasher;
+use QETG\Application\UseCase\ChangeMemberPassword;
+use QETG\Application\UseCase\ResetMemberPassword;
 use DateTimeImmutable;
+use InvalidArgumentException;
 
 final class AccountController
 {
+    private PasswordHasher $passwordHasher;
+    private ChangeMemberPassword $changeMemberPassword;
+    private ResetMemberPassword $resetMemberPassword;
+
     public function __construct(
         private MemberRepositoryInterface $members,
         private PendingRegistrationRepositoryInterface $pendingRegistrations,
@@ -35,6 +43,9 @@ final class AccountController
         private EmailSenderInterface $emailSender,
         private string $basePath
     ) {
+        $this->passwordHasher = new PasswordHasher();
+        $this->changeMemberPassword = new ChangeMemberPassword($this->members, $this->passwordHasher);
+        $this->resetMemberPassword = new ResetMemberPassword($this->members, $this->passwordResets, $this->passwordHasher);
     }
 
     public function loginForm(): void
@@ -67,22 +78,22 @@ final class AccountController
                 $matches[$member->id] = $member;
             }
         }
-        $valid = array_values(array_filter($matches, static fn (Member $member): bool => verifierMotDePasse($password, $member->passwordHash)));
+        $valid = array_values(array_filter($matches, fn (Member $member): bool => $this->passwordHasher->verify($password, $member->passwordHash)));
 
         if (\count($valid) !== 1) {
             $_SESSION['account_login_value'] = $identity;
             $this->flash('error', \count($valid) > 1
                 ? 'Plusieurs comptes correspondent à ces informations. Contactez l’assistance.'
-                : 'Identifiant ou mot de passe incorrect.');
+                : 'Identifiant ou mot de passe incorrect. Si votre mot de passe est ancien, réinitialisez-le avec le lien « Mot de passe oublié ».');
             $this->redirect('/connexion');
         }
 
         $member = $valid[0];
-        if (motDePasseDoitEtreRehache($member->passwordHash)) {
+        if ($this->passwordHasher->needsRehash($member->passwordHash)) {
             $member = new Member(
                 $member->id,
                 $member->login,
-                hacherMotDePasse($password),
+                $this->passwordHasher->hash($password),
                 $member->email,
                 $member->lastName,
                 $member->firstName,
@@ -159,7 +170,7 @@ final class AccountController
             null,
             $token,
             $login,
-            hacherMotDePasse($password),
+            $this->passwordHasher->hash($password),
             $email,
             $lastName,
             $firstName,
@@ -218,19 +229,25 @@ final class AccountController
             return;
         }
 
-        $member = $this->members->save(new Member(
-            null,
-            $registration->login,
-            $registration->passwordHash,
-            $registration->email,
-            $registration->lastName,
-            $registration->firstName,
-            false,
-            'default',
-            $registration->newsletterEnabled,
-            (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
-            date('d/m/Y')
-        ));
+        try {
+            $member = $this->members->save(new Member(
+                null,
+                $registration->login,
+                $registration->passwordHash,
+                $registration->email,
+                $registration->lastName,
+                $registration->firstName,
+                false,
+                'default',
+                $registration->newsletterEnabled,
+                (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
+                date('d/m/Y')
+            ));
+        } catch (\DomainException) {
+            $this->pendingRegistrations->delete((int) $registration->id);
+            $this->render('confirmation', 'Un compte utilise déjà ces informations. Contactez l’assistance.');
+            return;
+        }
         $this->pendingRegistrations->delete((int) $registration->id);
         session_regenerate_id(true);
         $_SESSION['id'] = $member->id;
@@ -239,7 +256,20 @@ final class AccountController
         $this->render('confirmation', 'Votre adresse est confirmée. Votre compte est prêt.');
     }
 
-    public function logout(): void
+    public function logout(): never
+    {
+        $submitted = $_POST['_csrf'] ?? null;
+        $expected = $_SESSION['csrf_token'] ?? null;
+        if (!\is_string($submitted) || $submitted === '' || !\is_string($expected) || !hash_equals($expected, $submitted)) {
+            http_response_code(403);
+            header('Content-Type: text/plain; charset=UTF-8');
+            exit('La session du formulaire a expiré. Réessayez depuis la page précédente.');
+        }
+
+        $this->destroySessionAndRedirectHome();
+    }
+
+    private function destroySessionAndRedirectHome(): never
     {
         $_SESSION = array();
         if (ini_get('session.use_cookies')) {
@@ -247,8 +277,7 @@ final class AccountController
             setcookie(session_name(), '', time() - 42000, $parameters['path'], $parameters['domain'], $parameters['secure'], $parameters['httponly']);
         }
         session_destroy();
-        header('Location: ' . $this->basePath . '/accueil', true, 303);
-        exit;
+        $this->redirect('/accueil');
     }
 
     public function forgotPasswordForm(): void
@@ -323,33 +352,19 @@ final class AccountController
             return;
         }
 
-        $member = $this->members->findById($reset->memberId);
         $password = (string) ($_POST['new_password'] ?? '');
         $confirmation = (string) ($_POST['password_confirmation'] ?? '');
-        if ($member === null) {
-            $this->passwordResets->delete($reset->id ?? 0);
-            $this->render('reset-password', 'Le compte associé à ce lien n’existe plus.');
-            return;
-        }
-        if (\strlen($password) < 10 || !hash_equals($password, $confirmation)) {
-            $this->flash('error', 'Le nouveau mot de passe doit contenir au moins 10 caractères et les deux saisies doivent correspondre.');
+        try {
+            $this->resetMemberPassword->execute($reset->memberId, $password, $confirmation);
+        } catch (InvalidArgumentException $exception) {
+            if ($this->members->findById($reset->memberId) === null) {
+                $this->passwordResets->delete($reset->id ?? 0);
+                $this->render('reset-password', $exception->getMessage());
+                return;
+            }
+            $this->flash('error', $exception->getMessage());
             $this->redirect('/reinitialiser-mot-de-passe?token=' . rawurlencode($token));
         }
-
-        $this->members->save(new Member(
-            $member->id,
-            $member->login,
-            hacherMotDePasse($password),
-            $member->email,
-            $member->lastName,
-            $member->firstName,
-            $member->isAdministrator,
-            $member->profileImage,
-            $member->newsletterEnabled,
-            $member->registrationIp,
-            $member->registeredAt
-        ));
-        $this->passwordResets->deleteByMemberId($member->id ?? 0);
         $this->flash('success', 'Votre mot de passe a été réinitialisé. Vous pouvez vous connecter.');
         $this->redirect('/connexion');
     }
@@ -369,7 +384,7 @@ final class AccountController
         }
         $member = $this->members->findById((int) $_SESSION['id']);
         if ($member === null) {
-            $this->logout();
+            $this->destroySessionAndRedirectHome();
         }
         $statistics = $this->statisticsForMember((int) $member->id);
         $playedQuizzes = array();
@@ -453,7 +468,7 @@ final class AccountController
         $firstName = trim((string) ($_POST['first_name'] ?? ''));
         $lastName = trim((string) ($_POST['last_name'] ?? ''));
         if ($member === null) {
-            $this->logout();
+            $this->destroySessionAndRedirectHome();
         }
         if ($firstName === '' || $lastName === '' || \strlen($firstName) > 50 || \strlen($lastName) > 50) {
             $this->flash('error', 'Le prénom et le nom sont obligatoires et ne peuvent pas dépasser 50 caractères.');
@@ -490,7 +505,7 @@ final class AccountController
 
         $member = $this->members->findById((int) $_SESSION['id']);
         if ($member === null) {
-            $this->logout();
+            $this->destroySessionAndRedirectHome();
         }
 
         $preset = basename((string) ($_POST['avatar_preset'] ?? ''));
@@ -558,7 +573,7 @@ final class AccountController
 
         $member = $this->members->findById((int) $_SESSION['id']);
         $password = (string) ($_POST['current_password'] ?? '');
-        if ($member === null || !verifierMotDePasse($password, $member->passwordHash)) {
+        if ($member === null || !$this->passwordHasher->verify($password, $member->passwordHash)) {
             $this->flash('error', 'Le mot de passe est incorrect. Le compte n’a pas été supprimé.');
             $this->redirect('/compte/profil');
         }
@@ -608,32 +623,15 @@ final class AccountController
             $this->redirect('/compte/mot-de-passe');
         }
 
-        $member = $this->members->findById((int) $_SESSION['id']);
         $currentPassword = (string) ($_POST['current_password'] ?? '');
         $newPassword = (string) ($_POST['new_password'] ?? '');
         $confirmation = (string) ($_POST['password_confirmation'] ?? '');
-        if ($member === null || !verifierMotDePasse($currentPassword, $member->passwordHash)) {
-            $this->flash('error', 'Le mot de passe actuel est incorrect.');
+        try {
+            $this->changeMemberPassword->execute((int) $_SESSION['id'], $currentPassword, $newPassword, $confirmation);
+        } catch (InvalidArgumentException $exception) {
+            $this->flash('error', $exception->getMessage());
             $this->redirect('/compte/mot-de-passe');
         }
-        if (\strlen($newPassword) < 10 || !hash_equals($newPassword, $confirmation)) {
-            $this->flash('error', 'Le nouveau mot de passe doit contenir au moins 10 caractères et les deux saisies doivent correspondre.');
-            $this->redirect('/compte/mot-de-passe');
-        }
-
-        $this->members->save(new Member(
-            $member->id,
-            $member->login,
-            hacherMotDePasse($newPassword),
-            $member->email,
-            $member->lastName,
-            $member->firstName,
-            $member->isAdministrator,
-            $member->profileImage,
-            $member->newsletterEnabled,
-            $member->registrationIp,
-            $member->registeredAt
-        ));
         $this->flash('success', 'Votre mot de passe a été modifié.');
         $this->redirect('/compte/mot-de-passe');
     }

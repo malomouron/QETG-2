@@ -1,61 +1,28 @@
-<!doctype html>
-<html lang="fr">
-<head>
 <?php
 function homeEscape(string $value): string
 {
-    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return \QETG\Presentation\View\Shared\ViewHelpers::escape($value);
 }
 
 function homeAssetUrl(string $path, string $basePath): string
 {
-    if (preg_match('#^(?:[a-z][a-z0-9+.-]*:|//)#i', $path) === 1) {
-        return $path;
-    }
-    return rtrim($basePath, '/') . '/' . ltrim($path, '/');
+    return \QETG\Presentation\View\Shared\ViewHelpers::assetUrl($path, $basePath);
 }
 
 $css = array(
     $basePath . '/css.css',
-    $basePath . '/commun/bandeau.css',
-    $basePath . '/resources/assets/css/home.css',
+    $basePath . '/assets/css/legacy-bandeau.css',
+    $basePath . '/assets/css/home.css',
 );
-afficher_head('Quiz en tout genre', $css, 'UTF-8');
+\QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentStart(
+    'Quiz en tout genre',
+    $css,
+    'home-page',
+    'Découvrez et partagez des quiz en tout genre.'
+);
 ?>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Découvrez et partagez des quiz en tout genre.">
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script>
-    function submitComment(token) {
-        document.getElementById('home-comment-form').submit();
-    }
-</script>
-</head>
-<body class="home-page">
 <div class="home-shell">
-    <header class="bandeau home-header">
-        <a class="home-brand" href="<?= homeEscape($homeUrl) ?>" aria-label="Accueil Quiz en tout genre">
-            <img src="<?= homeEscape($basePath) ?>/assets/images/community/icon.png" alt="" class="home-brand-icon">
-            <span>Quiz en tout genre</span>
-        </a>
-        <nav class="home-nav" aria-label="Navigation principale">
-            <a class="is-current" href="<?= homeEscape($homeUrl) ?>">Accueil</a>
-            <a href="<?= homeEscape($basePath) ?>/quiz_utilisateur.php">Quiz membres</a>
-            <a href="<?= homeEscape($basePath) ?>/poster_quiz.php">Créer un quiz</a>
-                <a href="<?= homeEscape($basePath) ?>/a-propos">À propos</a>
-                <a href="<?= homeEscape($basePath) ?>/aide">Aide</a>
-        </nav>
-        <div class="home-account">
-            <?php if ($loggedIn): ?>
-                <a class="home-account-link" href="<?= homeEscape($basePath) ?>/compte/profil"><?= homeEscape($displayLogin) ?></a>
-                <?php if ($isAdmin): ?><a class="home-account-link" href="<?= homeEscape($basePath) ?>/admin.php">Administration</a><?php endif; ?>
-                <a class="home-button home-button--small" href="<?= homeEscape($basePath) ?>/deconnexion">Déconnexion</a>
-            <?php else: ?>
-                <a class="home-account-link" href="<?= homeEscape($basePath) ?>/connexion">Connexion</a>
-                <a class="home-button home-button--small" href="<?= homeEscape($basePath) ?>/inscription">Créer un compte</a>
-            <?php endif; ?>
-        </div>
-    </header>
+    <?php $currentPage = 'home'; require __DIR__ . '/Shared/site-header.php'; ?>
 
     <main>
         <?php if (is_array($interactionFlash) && isset($interactionFlash['message'])): ?>
@@ -68,7 +35,7 @@ afficher_head('Quiz en tout genre', $css, 'UTF-8');
                 <p>Explorez des sujets variés, testez vos connaissances et découvrez les quiz créés par la communauté.</p>
                 <div class="home-hero-actions">
                     <a class="home-button" href="#catalogue">Découvrir les quiz <span aria-hidden="true">↓</span></a>
-                    <a class="home-button home-button--outline" href="<?= homeEscape($basePath) ?>/quiz_utilisateur.php">Quiz de la communauté</a>
+                    <a class="home-button home-button--outline" href="<?= homeEscape($basePath) ?>/quiz-membres">Quiz de la communauté</a>
                 </div>
             </div>
             <div class="home-hero-art" aria-hidden="true">
@@ -155,7 +122,7 @@ afficher_head('Quiz en tout genre', $css, 'UTF-8');
                         <h2><?= $completedOfficialQuizzes ?> <span>/ <?= $totalQuizzes ?></span></h2>
                         <p>quiz officiels réalisés</p>
                         <progress value="<?= min($completedOfficialQuizzes, $totalQuizzes) ?>" max="<?= max(1, $totalQuizzes) ?>"> <?= $completedOfficialQuizzes ?> / <?= $totalQuizzes ?></progress>
-                        <a class="sidebar-text-link" href="<?= homeEscape($basePath) ?>/profil.php">Voir mon profil →</a>
+                        <a class="sidebar-text-link" href="<?= homeEscape($basePath) ?>/compte/profil">Voir mon profil →</a>
                     <?php else: ?>
                         <h2>À votre rythme</h2>
                         <p>Connectez-vous pour suivre vos résultats et retrouver votre progression.</p>
@@ -166,7 +133,7 @@ afficher_head('Quiz en tout genre', $css, 'UTF-8');
                     <span class="create-card-icon" aria-hidden="true">＋</span>
                     <h2>Votre quiz, vos règles</h2>
                     <p>Créez un quiz et partagez-le avec les autres membres.</p>
-                    <a class="home-button home-button--full" href="<?= homeEscape($basePath) ?>/poster_quiz.php">Créer un quiz</a>
+                    <a class="home-button home-button--full" href="<?= homeEscape($basePath) ?>/quiz-membres/editeur">Créer un quiz</a>
                 </section>
                 <a class="help-card" href="<?= homeEscape($basePath) ?>/aide"><span aria-hidden="true">?</span><span><strong>Besoin d’aide ?</strong><small>Consulter le centre d’aide</small></span><b aria-hidden="true">→</b></a>
             </aside>
@@ -178,26 +145,32 @@ afficher_head('Quiz en tout genre', $css, 'UTF-8');
                     <p class="home-eyebrow">La communauté</p>
                     <h2 id="community-title">Un mot à nous laisser ?</h2>
                 </div>
-                <p>Une idée ou un commentaire sur le site ? Écrivez-nous.</p>
+                <?php if (!$captchaMisconfigured): ?>
+                    <p>Une idée ou un commentaire sur le site ? Écrivez-nous.</p>
+                <?php endif; ?>
             </div>
-            <form action="<?= homeEscape($basePath) ?>/interactions/commentaire" method="post" id="home-comment-form" class="home-comment-form">
-                <input type="hidden" name="_csrf" value="<?= homeEscape($interactionCsrf) ?>">
-                <?php if ($loggedIn && $member !== null): ?>
-                    <input type="hidden" name="user_name" value="<?= homeEscape($member->lastName . ' (' . $member->login . ')') ?>">
-                    <input type="hidden" name="user_prenom" value="<?= homeEscape($member->firstName) ?>">
-                    <input type="hidden" name="user_mail" value="<?= homeEscape($member->email) ?>">
-                    <div class="comment-identity">Message envoyé par <strong><?= homeEscape($displayName !== '' ? $displayName : $displayLogin) ?></strong></div>
-                <?php else: ?>
-                    <label>Nom<input type="text" name="user_name" required autocomplete="family-name"></label>
-                    <label>Prénom<input type="text" name="user_prenom" required autocomplete="given-name"></label>
-                    <label class="comment-email">E-mail<input type="email" name="user_mail" required autocomplete="email"></label>
-                <?php endif; ?>
-                <label class="comment-message">Votre message<textarea name="user_message" rows="4" required></textarea></label>
-                <?php if ($siteKey !== ''): ?>
-                    <div class="g-recaptcha" data-sitekey="<?= homeEscape($siteKey) ?>" data-callback="submitComment" data-theme="dark"></div>
-                <?php endif; ?>
-                <button class="home-button" type="submit">Envoyer le message</button>
-            </form>
+            <?php if ($captchaMisconfigured): ?>
+                <p role="status">L’envoi de commentaires est temporairement indisponible : la vérification anti-robot est mal configurée.</p>
+            <?php else: ?>
+                <form action="<?= homeEscape($basePath) ?>/interactions/commentaire" method="post" id="home-comment-form" class="home-comment-form">
+                    <input type="hidden" name="_csrf" value="<?= homeEscape($interactionCsrf) ?>">
+                    <?php if ($loggedIn && $member !== null): ?>
+                        <input type="hidden" name="user_name" value="<?= homeEscape($member->lastName . ' (' . $member->login . ')') ?>">
+                        <input type="hidden" name="user_prenom" value="<?= homeEscape($member->firstName) ?>">
+                        <input type="hidden" name="user_mail" value="<?= homeEscape($member->email) ?>">
+                        <div class="comment-identity">Message envoyé par <strong><?= homeEscape($displayName !== '' ? $displayName : $displayLogin) ?></strong></div>
+                    <?php else: ?>
+                        <label>Nom<input type="text" name="user_name" required autocomplete="family-name"></label>
+                        <label>Prénom<input type="text" name="user_prenom" required autocomplete="given-name"></label>
+                        <label class="comment-email">E-mail<input type="email" name="user_mail" required autocomplete="email"></label>
+                    <?php endif; ?>
+                    <label class="comment-message">Votre message<textarea name="user_message" rows="4" required></textarea></label>
+                    <?php if ($siteKey !== ''): ?>
+                        <div class="g-recaptcha" data-sitekey="<?= homeEscape($siteKey) ?>" data-callback="submitComment" data-theme="dark"></div>
+                    <?php endif; ?>
+                    <button class="home-button" type="submit">Envoyer le message</button>
+                </form>
+            <?php endif; ?>
         </section>
 
         <?php if ($commentCards !== array()): ?>
@@ -213,10 +186,11 @@ afficher_head('Quiz en tout genre', $css, 'UTF-8');
                                 <div class="comment-reply"><?= nl2br(homeEscape($reply->content)) ?></div>
                             <?php endforeach; ?>
                             <?php if ($loggedIn): ?>
-                                <form class="reply-form" action="<?= homeEscape($basePath) ?>/reponse_commentaire.php" method="post">
-                                    <input type="hidden" name="id_comm" value="<?= (int) $item['comment']->id ?>">
+                                <form class="reply-form" action="<?= homeEscape($basePath) ?>/interactions/reponse-commentaire" method="post">
+                                    <input type="hidden" name="_csrf" value="<?= homeEscape($interactionCsrf) ?>">
+                                    <input type="hidden" name="comment_id" value="<?= (int) $item['comment']->id ?>">
                                     <label class="visually-hidden" for="reply-<?= (int) $item['comment']->id ?>">Répondre au commentaire</label>
-                                    <input id="reply-<?= (int) $item['comment']->id ?>" name="reponse_comm" placeholder="Répondre…" required>
+                                    <input id="reply-<?= (int) $item['comment']->id ?>" name="reply" maxlength="2000" placeholder="Répondre…" required>
                                     <button type="submit" aria-label="Envoyer la réponse">→</button>
                                 </form>
                             <?php endif; ?>
@@ -227,15 +201,6 @@ afficher_head('Quiz en tout genre', $css, 'UTF-8');
         <?php endif; ?>
     </main>
 
-    <footer class="home-footer">
-        <p>Quiz en tout genre · Créé par Malo MOURON · Copyright © 2018</p>
-        <nav aria-label="Liens d’information">
-            <a href="<?= homeEscape($basePath) ?>/a-propos">À propos</a>
-            <a href="<?= homeEscape($basePath) ?>/a-propos#2">Contacts</a>
-            <a href="<?= homeEscape($basePath) ?>/a-propos#3">Règles</a>
-            <a href="<?= homeEscape($basePath) ?>/a-propos#5">Confidentialité</a>
-        </nav>
-    </footer>
+    <?php require __DIR__ . '/Shared/site-footer.php'; ?>
 </div>
-</body>
-</html>
+<?php \QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentEnd(); ?>

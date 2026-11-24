@@ -1,7 +1,11 @@
 Options -Indexes
 RewriteEngine On
 
+# Do not serve retired admin endpoints, even if a deployment left old files behind.
+RewriteRule ^admin(?:/|$) - [G,NC]
+
 # Keep direct requests to legacy PHP scripts and existing assets unchanged.
+RewriteRule ^commun/bandeau\.css$ assets/css/legacy-bandeau.css [L]
 RewriteRule ^commun/(.+\.(?:png|jpe?g|gif|webp|svg|bmp|tiff|ico))$ assets/images/community/$1 [NC,L]
 RewriteRule ^(?:quiz/)?image-profil/image-personaliser/(.+)$ uploads/avatars/$1 [L]
 RewriteRule ^(?:quiz/)?image-profil/(.+\.(?:png|jpe?g|gif|webp|svg|bmp|tiff|ico))$ assets/images/avatars/presets/$1 [NC,L]

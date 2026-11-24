@@ -6,20 +6,18 @@ Faire évoluer QETG vers une application maintenable, testable et déployable de
 
 Ce plan s'appuie sur l'inventaire statique de [`FONCTIONNALITES.md`](FONCTIONNALITES.md). Il décrit une cible recommandée et un ordre de réalisation ; ce n'est pas encore une décision d'architecture validée ni un engagement de livraison.
 
-**Périmètre demandé :** conserver toutes les fonctionnalités existantes, y compris « Sortie Ciné », l'aide, la newsletter, les abonnements et la modération. Pour les parcours incomplets, préserver leur intention et documenter leur comportement avant de les achever.
+**Périmètre :** préserver les parcours actuellement implémentés, notamment l’aide/présentation, les quiz, les comptes, la newsletter, les abonnements et les signalements. Les anciennes pages PHP qui ne figurent plus dans le dépôt ne sont pas garanties comme URL de compatibilité ; voir l’inventaire à jour dans [`FONCTIONNALITES.md`](FONCTIONNALITES.md).
 
 ## État actuel observé
 
-Le projet est une application PHP procédurale rendue côté serveur. Les pages mélangent requêtes SQL, logique métier et HTML, parfois dans de très gros fichiers (`index.php`, `profil.php`, `quiz_utilisateur.php`). La couche de données est une classe maison autour de MySQLi ; la configuration est un fichier PHP local non versionné.
+Le projet reste une application PHP rendue côté serveur, mais les parcours principaux passent maintenant par `index.php`, un routeur, des contrôleurs, des cas d’usage, des dépôts MySQL et des vues partagées. `MySqlConnection` remplace l’ancienne classe globale `db`. Le tableau de bord `/administration` remplace les écrans procéduraux du dossier `admin/` ; l’ancien point d’entrée `admin.php` ne sert plus qu’à rediriger les favoris GET.
 
 L'audit fonctionnel a également relevé :
 
 - des chemins web absolus en `/quiz/`, qui lient certaines images et pages au nom du dossier de déploiement ;
 - une base SQL d'exemple nommée `test`, alors que la configuration d'installation doit désigner explicitement la base créée ;
-- des noms de tables différents entre certains écrans d'administration et le schéma `QETG.sql` ;
-- des parcours inachevés ou absents, notamment la recherche d'aide et la reprise de quiz incomplets ;
-- un champ historique `pass_md5` utilisé pour stocker les mots de passe ; les comptes non encore reconnectés peuvent contenir un ancien hachage MD5 ;
-- à l'origine, pas de socle de tests automatisés ni de manifeste Composer repéré pour le site historique.
+- des parcours legacy manquants qui ne sont pas maintenus en compatibilité ; les routes actuelles et limites sont répertoriées dans `FONCTIONNALITES.md` ;
+- historiquement, le schéma utilisait `pass_md5` et le code acceptait des MD5 ; la migration `202611230002_remove_legacy_md5_passwords.sql` renomme les colonnes, invalide les MD5 restants et impose leur réinitialisation par e-mail ;
 
 Ces constats sont issus d'une lecture du code et du schéma, pas d'un audit d'exécution ou d'un audit de sécurité exhaustif.
 
@@ -30,7 +28,7 @@ Conserver l'application PHP historique et l'améliorer progressivement, par parc
 | Domaine | Choix recommandé | Raison |
 |---|---|---|
 | Langage et serveur | PHP avec Apache dans l'image Docker, testé sur PHP 8.2 et 8.5 | Conserver le fonctionnement actuel et rendre les versions vérifiables. |
-| Structure | PHP procédural existant, refactorisé par petits changements | Éviter une réécriture parallèle et réduire le risque de régression. |
+| Structure | Architecture en couches existante pour les parcours routés, dont l’administration | Réduire les dépendances legacy sans réécriture parallèle. |
 | Base de données | MySQL 8.4 dans Docker Compose ; conserver MySQL/MariaDB pour les installations natives | Utiliser un environnement reproductible sans exposer la base sur l'hôte. |
 | Dépendances | Composer et npm avec leurs fichiers de verrouillage | Installer les bibliothèques externes sans versionner leurs copies. |
 | CI/CD | GitHub Actions et Docker Compose | Tester les deux versions de PHP et publier l'image GHCR depuis `main` après succès. |
@@ -64,14 +62,14 @@ Ne pas ajouter dès le départ un framework parallèle, Kubernetes, des microser
 6. **Opérations atomiques** : enregistrer la création d'un quiz et ses questions/réponses dans une transaction afin d'éviter les objets partiellement créés.
 7. **Gestion des fichiers** : valider type MIME, taille et nom des fichiers, stocker hors des chemins codés en dur et ne jamais faire confiance au nom envoyé par le navigateur.
 8. **Erreurs et journaux** : afficher une page d'erreur utilisateur non technique, journaliser le détail côté serveur et ne pas continuer après une configuration de base de données invalide.
-9. **Mot de passe et sessions** : conserver le hachage moderne en place et supprimer les compatibilités MD5 résiduelles au fil des parcours vérifiés.
+9. **Mot de passe et sessions** : terminé pour les parcours applicatifs. `PasswordHasher` n'accepte plus MD5 et les colonnes utilisent les noms `password_hash` et `cle_password_hash` ; appliquer la migration SQL aux bases existantes.
 10. **Accessibilité et interface** : assurer navigation clavier, labels, contrastes et retours de validation ; harmoniser les composants et rendre les textes traduisibles sans dupliquer les pages.
 
 ## Feuille de route par étapes
 
 ### Étape 0 — Cadrer et sauvegarder
 
-- Conserver toutes les fonctionnalités recensées, y compris « Sortie Ciné », l'aide, la newsletter, les abonnements et la modération.
+- Préserver les parcours actuellement implémentés, dont les quiz, l’aide, la newsletter, les abonnements et les signalements. Les pages historiques absentes du dépôt ne sont pas garanties comme URL de compatibilité.
 - Sauvegarder la base réelle et les fichiers téléversés ; ne pas réimporter `QETG.sql` sur une base de production, car le dump contient des `DROP TABLE`.
 - Établir un environnement de test avec une copie anonymisée de la base et des données de démonstration.
 
@@ -81,7 +79,7 @@ Ne pas ajouter dès le départ un framework parallèle, Kubernetes, des microser
 
 - Tests de caractérisation en place : chargement indépendant du dossier, fonctions utilitaires et logique de publication. La CI les exécute dans Docker Compose sur PHP 8.2 et 8.5 et vérifie la syntaxe des fichiers PHP.
 - Tests HTTP avec MySQL isolé en place : accueil, jeu et progression, création/modification/suppression de quiz, comptes et récupération de mot de passe, favoris, réactions, abonnements, commentaires et signalements. Le transport e-mail est simulé ; d'autres parcours restent à couvrir. Les conteneurs n'exposent pas de port de base sur l'hôte et n'utilisent pas la base XAMPP.
-- Les tests ont accompagné la correction de requêtes de progression de quiz et du contrôle du mot de passe lors de la connexion par login. Les mots de passe MD5 historiques sont convertis après une connexion réussie ; les inscriptions, changements et réinitialisations utilisent un hachage moderne.
+- Les tests ont accompagné la correction de requêtes de progression de quiz et du contrôle du mot de passe lors de la connexion par login. Les inscriptions, changements et réinitialisations utilisent un hachage moderne. Les anciens MD5 ne sont plus acceptés; les comptes concernés doivent utiliser la réinitialisation par e-mail.
 - Les paramètres SMTP sont à configurer localement dans `config.inc.php`. Un ancien identifiant présent dans le code doit être révoqué ou renouvelé côté fournisseur, car il peut rester dans l'historique Git.
 - Les tests ont aussi accompagné la correction de la table utilisée par les réactions aux quiz membres et de la perte de description lors de la modification d'un quiz sans nouvelle image.
 - Une configuration dont le nom de base est vide est refusée avant la connexion ; la documentation avertit que le SQL de démonstration sélectionne `test` et peut écraser ses tables.
@@ -100,7 +98,7 @@ Ne pas ajouter dès le départ un framework parallèle, Kubernetes, des microser
 - Utiliser Docker Compose pour l'application historique, MySQL et les volumes persistants des données téléversées.
 - Garder la base hors des ports hôte et ne jamais importer automatiquement `QETG.sql`.
 - Exécuter caractérisation, lint et tests HTTP/MySQL dans la même configuration Compose sur PHP 8.2 et 8.5.
-- Publier l'image GHCR uniquement après succès sur `main` ; effectuer les mises à jour de serveur manuellement.
+- Publier l'image GHCR uniquement après succès sur `main` ; déployer l'image par digest si le déploiement de production est activé.
 
 **Résultat attendu :** environnement local reproductible, contrôles CI verts et image versionnée disponible pour déploiement.
 
@@ -116,14 +114,14 @@ Ordre conseillé, un parcours et un objectif à la fois :
 
 Chaque lot doit partir d'un comportement caractérisé, inclure ses tests et préserver les autres parcours. Ne pas créer de seconde implémentation en parallèle.
 
-Le parcours des quiz officiels a maintenant une présentation, une question et un résultat routés : reprise de progression pour les membres, progression de session pour les visiteurs, redémarrage après erreur, enregistrement de l’historique/favori existant et vérification des succès à la fin. Les scripts historiques restent accessibles en compatibilité jusqu’à leur migration complète.
+Le parcours des quiz officiels a une présentation, une question et un résultat routés : reprise de progression pour les membres, progression de session pour les visiteurs, redémarrage après erreur, enregistrement de l’historique/favori existant et vérification des succès à la fin. Les anciens scripts non présents dans le dépôt ne constituent pas des adaptateurs garantis.
 
 **Résultat attendu :** le code historique devient progressivement plus lisible et chaque changement est protégé par des tests.
 
 ### Étape 4 — Livrer et vérifier les changements
 
 - Faire passer la pull request par la CI Compose avant toute intégration.
-- Mettre à jour l'image sur le serveur avec la procédure Compose documentée et vérifier la sauvegarde de la base et des fichiers téléversés.
+- Configurer le déploiement de production selon la procédure documentée et vérifier la sauvegarde de la base et des fichiers téléversés.
 - Conserver un retour arrière vers le tag d'image précédent.
 
 **Résultat attendu :** livraison traçable et retour arrière possible sans remplacer l'application par un framework parallèle.

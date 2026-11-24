@@ -14,6 +14,9 @@ interface MemberRepositoryInterface
 
     public function findByEmail(string $email): ?Member;
 
+    /** @return list<Member> */
+    public function searchOthers(int $excludedMemberId, string $loginTerm, int $limit): array;
+
     public function save(Member $member): Member;
 
     public function delete(int $id): void;

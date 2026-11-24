@@ -1,36 +1,21 @@
 <?php
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$assetUrl = static function (string $path) use ($basePath): string {
-    if (preg_match('#^(?:[a-z][a-z0-9+.-]*:|//)#i', $path) === 1) {
-        return $path;
-    }
-    return rtrim($basePath, '/') . '/' . ltrim($path, '/');
-};
+$escape = array(\QETG\Presentation\View\Shared\ViewHelpers::class, 'escape');
+$assetUrl = static fn (?string $path): string => \QETG\Presentation\View\Shared\ViewHelpers::assetUrl($path, $basePath);
 $css = array(
     $basePath . '/css.css',
-    $basePath . '/commun/bandeau.css',
-    $basePath . '/resources/assets/css/home.css',
-    $basePath . '/resources/assets/css/account.css',
+    $basePath . '/assets/css/legacy-bandeau.css',
+    $basePath . '/assets/css/home.css',
+    $basePath . '/assets/css/account.css',
+);
+\QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentStart(
+    'Espace membre - Quiz en tout genre',
+    $css,
+    'home-page account-page' . ($page === 'profile' ? ' account-page--profile' : '')
 );
 ?>
-<!doctype html>
-<html lang="fr">
-<head>
-<?php afficher_head('Espace membre - Quiz en tout genre', $css, 'UTF-8'); ?>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body class="home-page account-page<?= $page === 'profile' ? ' account-page--profile' : '' ?>">
 <div class="home-shell">
-    <header class="bandeau home-header">
-        <a class="home-brand" href="<?= $escape($basePath) ?>/accueil"><img src="<?= $escape($basePath) ?>/assets/images/community/icon.png" alt="" class="home-brand-icon"><span>Quiz en tout genre</span></a>
-        <nav class="home-nav" aria-label="Navigation principale">
-            <a href="<?= $escape($basePath) ?>/accueil">Accueil</a>
-            <a href="<?= $escape($basePath) ?>/quiz_utilisateur.php">Quiz membres</a>
-            <a href="<?= $escape($basePath) ?>/a-propos">À propos</a>
-        </nav>
-        <div class="home-account"><a class="home-account-link" href="<?= $escape($basePath) ?>/aide">Aide</a></div>
-    </header>
+    <?php require __DIR__ . '/Shared/site-header.php'; ?>
 
     <main class="account-main">
         <section class="account-panel">
@@ -152,8 +137,10 @@ $css = array(
                                 <?php endforeach; ?>
                             </div></fieldset>
                         <?php endif; ?>
-                        <label class="avatar-upload-label" for="profile-avatar-upload">Ou importer un avatar (JPEG, PNG, GIF ou WebP · 2 Mo maximum)</label>
-                        <input id="profile-avatar-upload" type="file" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp">
+                        <?php
+                        $imageUpload = array('id' => 'profile-avatar-upload', 'name' => 'avatar', 'label' => 'Ou importer un avatar', 'maxMb' => 2);
+                        require __DIR__ . '/Shared/image-upload.php';
+                        ?>
                         <button class="home-button" type="submit">Mettre à jour l’avatar</button>
                     </form>
                 </section>
@@ -168,9 +155,14 @@ $css = array(
                                 <?php $playedQuiz = $item['quiz']; $playedStatistic = $item['statistic']; ?>
                                 <article class="profile-quiz-row">
                                     <?php if ($item['image'] !== null): ?><img src="<?= $escape($assetUrl($item['image']->source)) ?>" alt="<?= $escape($item['image']->altText) ?>" loading="lazy"><?php else: ?><span class="profile-quiz-placeholder" aria-hidden="true">Q?</span><?php endif; ?>
-                                    <div class="profile-quiz-details"><a href="<?= $escape($basePath) ?>/<?= $playedQuiz->isMemberCreated ? 'makeQuiz.php?id_quiz=' . (int) $playedQuiz->id : 'quiz-officiel?id=' . (int) $playedQuiz->id ?>"><?= $escape($playedQuiz->name) ?></a><span><?= $escape($playedStatistic->playedAt) ?> · <?= (int) $playedStatistic->score ?> point(s)</span></div>
+                                    <div class="profile-quiz-details"><a href="<?= $escape($basePath) ?>/<?= $playedQuiz->isMemberCreated ? 'quiz-membres/jouer?id=' . (int) $playedQuiz->id : 'quiz-officiel?id=' . (int) $playedQuiz->id ?>"><?= $escape($playedQuiz->name) ?></a><span><?= $escape($playedStatistic->playedAt) ?> · <?= (int) $playedStatistic->score ?> point(s)</span></div>
                                     <div class="profile-quiz-actions">
-                                        <?php if ($playedStatistic->isFavorite): ?><a href="<?= $escape($basePath) ?>/changer-en-non-favoris.php?id_quiz=<?= (int) $playedQuiz->id ?>" aria-label="Retirer des favoris">★ Favori</a><?php else: ?><a href="<?= $escape($basePath) ?>/changer-en-favoris.php?id_quiz=<?= (int) $playedQuiz->id ?>" aria-label="Ajouter aux favoris">☆ Ajouter aux favoris</a><?php endif; ?>
+                                        <form action="<?= $escape($basePath) ?>/compte/favori" method="post">
+                                            <input type="hidden" name="_csrf" value="<?= $escape($csrfToken) ?>">
+                                            <input type="hidden" name="quiz_id" value="<?= (int) $playedQuiz->id ?>">
+                                            <input type="hidden" name="favorite" value="<?= $playedStatistic->isFavorite ? '0' : '1' ?>">
+                                            <button type="submit" aria-label="<?= $playedStatistic->isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris' ?>"><?= $playedStatistic->isFavorite ? '★ Favori' : '☆ Ajouter aux favoris' ?></button>
+                                        </form>
                                         <span>+<?= (int) $playedQuiz->experiencePoints ?> XP</span>
                                     </div>
                                 </article>
@@ -193,7 +185,7 @@ $css = array(
                 </section>
 
                 <section class="profile-section" id="mes-quiz">
-                    <div class="profile-section-heading"><div><p class="home-eyebrow">Création</p><h2>Mes quiz</h2></div><a class="profile-inline-link" href="<?= $escape($basePath) ?>/poster_quiz.php">＋ Créer un quiz</a></div>
+                    <div class="profile-section-heading"><div><p class="home-eyebrow">Création</p><h2>Mes quiz</h2></div><a class="profile-inline-link" href="<?= $escape($basePath) ?>/quiz-membres/editeur">＋ Créer un quiz</a></div>
                     <?php if (($profileData['createdQuizzes'] ?? array()) === array()): ?>
                         <p class="profile-empty">Vous n’avez pas encore créé de quiz.</p>
                     <?php else: ?>
@@ -206,10 +198,10 @@ $css = array(
                                     <p><?= $escape($createdQuizEntity->welcomeText) ?></p>
                                     <div class="created-quiz-reactions"><span>♥ <?= (int) $createdQuiz['likes'] ?></span><span>♡ <?= (int) $createdQuiz['dislikes'] ?></span><span>+<?= (int) $createdQuizEntity->experiencePoints ?> XP</span></div>
                                     <div class="created-quiz-actions">
-                                        <a href="<?= $escape($basePath) ?>/<?= $createdQuizEntity->isComplete ? 'makeQuiz.php?id_quiz=' . (int) $createdQuizEntity->id : 'poster_quiz.php?q=' . (int) $createdQuizEntity->id ?>"><?= $createdQuizEntity->isComplete ? 'Voir le quiz' : 'Reprendre' ?> →</a>
-                                        <a href="<?= $escape($basePath) ?>/poster_quiz.php?q=<?= (int) $createdQuizEntity->id ?>">Modifier</a>
-                                        <?php if ($createdQuizEntity->isComplete): ?><button type="button" class="profile-share-button" data-share-url="<?= $escape($shareBaseUrl . '/makeQuiz.php?id_quiz=' . (int) $createdQuizEntity->id) ?>">Partager</button><?php endif; ?>
-                                        <form action="<?= $escape($basePath) ?>/compte/quiz/supprimer" method="post" onsubmit="return confirm('Supprimer ce quiz et ses questions ?');"><input type="hidden" name="_csrf" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="quiz_id" value="<?= (int) $createdQuizEntity->id ?>"><button type="submit">Supprimer</button></form>
+                                        <a href="<?= $escape($basePath) ?>/<?= $createdQuizEntity->isComplete ? 'quiz-membres/jouer?id=' . (int) $createdQuizEntity->id : 'quiz-membres/editeur?id=' . (int) $createdQuizEntity->id ?>"><?= $createdQuizEntity->isComplete ? 'Voir le quiz' : 'Reprendre' ?> →</a>
+                                        <a href="<?= $escape($basePath) ?>/quiz-membres/editeur?id=<?= (int) $createdQuizEntity->id ?>">Modifier</a>
+                                        <?php if ($createdQuizEntity->isComplete): ?><button type="button" class="profile-share-button" data-share-url="<?= $escape($shareBaseUrl . '/quiz-membres/jouer?id=' . (int) $createdQuizEntity->id) ?>">Partager</button><?php endif; ?>
+                                        <form action="<?= $escape($basePath) ?>/compte/quiz/supprimer" method="post" data-confirm="Supprimer ce quiz et ses questions ?"><input type="hidden" name="_csrf" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="quiz_id" value="<?= (int) $createdQuizEntity->id ?>"><button type="submit">Supprimer</button></form>
                                     </div>
                                 </article>
                             <?php endforeach; ?>
@@ -224,7 +216,7 @@ $css = array(
                 <details class="profile-delete-account">
                     <summary>Supprimer mon compte</summary>
                     <p>Cette action supprime votre compte et vos quiz personnels. Elle est irréversible.</p>
-                    <form action="<?= $escape($basePath) ?>/compte/supprimer" method="post" class="account-form" onsubmit="return confirm('Confirmer la suppression définitive du compte ?');">
+                    <form action="<?= $escape($basePath) ?>/compte/supprimer" method="post" class="account-form" data-confirm="Confirmer la suppression définitive du compte ?">
                         <input type="hidden" name="_csrf" value="<?= $escape($csrfToken) ?>">
                         <label for="delete-account-password">Confirmez avec votre mot de passe</label>
                         <input id="delete-account-password" type="password" name="current_password" autocomplete="current-password" required>
@@ -233,7 +225,7 @@ $css = array(
                 </details>
                 <div class="profile-extra-links">
                     <label for="profile-language">Langue de consultation
-                        <select id="profile-language" onchange="if (this.value !== 'fr') { window.location.href = 'https://translate.google.com/translate?sl=fr&tl=' + encodeURIComponent(this.value) + '&u=' + encodeURIComponent(window.location.href); }">
+                        <select id="profile-language" data-translate-select>
                             <option value="fr">Français</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="zh-CN">中文</option>
                         </select>
                     </label>
@@ -267,27 +259,11 @@ $css = array(
             <p class="home-eyebrow">Jouez, apprenez, partagez</p>
             <h2>Chaque quiz est une nouvelle découverte.</h2>
             <p>Retrouvez les quiz officiels et ceux de la communauté, et gardez une trace de vos résultats.</p>
-            <a href="<?= $escape($basePath) ?>/quiz_utilisateur.php">Explorer les quiz →</a>
+            <a href="<?= $escape($basePath) ?>/quiz-membres">Explorer les quiz →</a>
         </aside>
         <?php endif; ?>
     </main>
 
-    <footer class="home-footer"><p>Quiz en tout genre · Une communauté de curieux.</p><nav aria-label="Liens d’information"><a href="<?= $escape($basePath) ?>/a-propos">À propos</a><a href="<?= $escape($basePath) ?>/aide">Aide</a></nav></footer>
+    <?php require __DIR__ . '/Shared/site-footer.php'; ?>
 </div>
-<?php if ($page === 'profile'): ?>
-<script>
-    document.querySelectorAll('.profile-share-button').forEach(function (button) {
-        button.addEventListener('click', async function () {
-            const url = button.dataset.shareUrl;
-            try {
-                await navigator.clipboard.writeText(url);
-                button.textContent = 'Lien copié';
-            } catch (error) {
-                window.prompt('Copiez le lien du quiz :', url);
-            }
-        });
-    });
-</script>
-<?php endif; ?>
-</body>
-</html>
+<?php \QETG\Presentation\View\Shared\ApplicationLayout::renderDocumentEnd(); ?>

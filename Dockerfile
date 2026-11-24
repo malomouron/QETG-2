@@ -3,6 +3,7 @@ ARG PHP_VERSION=8.5
 FROM composer:2 AS php-dependencies
 WORKDIR /app
 COPY composer.json composer.lock ./
+COPY src ./src
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --classmap-authoritative
 
 FROM node:22-alpine AS javascript-dependencies
